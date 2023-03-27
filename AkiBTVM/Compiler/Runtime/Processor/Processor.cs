@@ -10,7 +10,7 @@ namespace Kurisu.AkiBT.Compiler
     {
         Int,Float,Bool,String,Vector3
     }
-    internal abstract class Processor
+    internal abstract class Processor:IDisposable
     {
         internal const string Composite="Composite";
         internal const string Conditional="Conditional";
@@ -135,5 +135,11 @@ namespace Kurisu.AkiBT.Compiler
             }
             return null;
         }
+
+        public void Dispose()
+        {
+            OnDispose();
+        }
+        protected virtual void OnDispose(){}
     }
 }

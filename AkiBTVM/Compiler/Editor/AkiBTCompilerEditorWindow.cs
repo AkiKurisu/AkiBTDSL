@@ -8,8 +8,6 @@ using Newtonsoft.Json;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using UnityEditor.UIElements;
-
 namespace Kurisu.AkiBT.Compiler.Editor
 {
 internal class AkiBTCompilerEditorWindow : EditorWindow
@@ -35,7 +33,7 @@ internal class AkiBTCompilerEditorWindow : EditorWindow
     {
         try
         {
-            compiler=new AkiBTCompiler($"{Application.streamingAssetsPath}/{ReadFileName}.json");
+            compiler=new AkiBTCompiler(ReadFileName);
         }
         catch(ArgumentNullException)
         {
@@ -45,7 +43,7 @@ internal class AkiBTCompilerEditorWindow : EditorWindow
     private async void AsyncInitCompiler()
     {
         await GetTypeDict();
-        compiler=new AkiBTCompiler($"{Application.streamingAssetsPath}/{ReadFileName}.json");
+        compiler=new AkiBTCompiler(ReadFileName);
         Debug.Log("AkiBT Compiler Inited Already!");
     }
     public void CreateGUI()
@@ -98,7 +96,21 @@ internal class AkiBTCompilerEditorWindow : EditorWindow
     }
     private void Compile()
     {
-        outputField.value=compiler.Compile(inputField.value);
+        if(string.IsNullOrEmpty(inputField.value))
+        {
+            Debug.Log("<color=#ff2f2f>AkiBTCompiler</color>:Input Code Is Empty!");
+            return;
+        }
+        try
+        {
+            outputField.value=compiler.Compile(inputField.value);
+            Debug.Log("<color=#3aff48>AkiBTCompiler</color>:Compile Success!");
+        }
+        catch(Exception e)
+        {
+            Debug.Log("<color=#ff2f2f>AkiBTCompiler</color>:Compile Fail!");
+            throw e;
+        }
     }
     private async Task GetTypeDict()
     {

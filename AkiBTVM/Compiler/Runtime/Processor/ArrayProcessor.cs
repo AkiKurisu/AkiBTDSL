@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using UnityEngine;
 namespace Kurisu.AkiBT.Compiler
 {
     internal class ArrayProcessor : Processor
@@ -41,16 +40,20 @@ namespace Kurisu.AkiBT.Compiler
             if(type.HasValue)
             {
                 currentIndex--;
-                var processor=new NodeProcessor(compiler,tokens,currentIndex);
-                childCache.Add(processor.GetNode());
-                currentIndex=processor.CurrentIndex;
+                using(NodeProcessor processor=new NodeProcessor(compiler,tokens,currentIndex))
+                {
+                    childCache.Add(processor.GetNode());
+                    currentIndex=processor.CurrentIndex;
+                }
             }
             else
             {
                 currentIndex--;
-                var processor=new ValueProcessor(compiler,tokens,currentIndex);
-                childCache.Add(processor.GetPropertyValue());
-                currentIndex=processor.CurrentIndex;
+                using(ValueProcessor processor=new ValueProcessor(compiler,tokens,currentIndex))
+                {
+                    childCache.Add(processor.GetPropertyValue());
+                    currentIndex=processor.CurrentIndex;
+                }
             }
             NextNoSpace();
             if(CurrentToken==RightBracket)
@@ -66,7 +69,6 @@ namespace Kurisu.AkiBT.Compiler
         }
         internal object[] GetArray()
         {
-            //Debug.Log("输出Child:"+childCache);
             return childCache.ToArray();
         }
     }

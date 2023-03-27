@@ -38,9 +38,11 @@ namespace Kurisu.AkiBT.Compiler
             //检测是否存在Children
             if(CurrentToken==LeftBracket)
             {
-                var processor=new ArrayProcessor(compiler,tokens,currentIndex);
-                value=processor.GetArray();
-                currentIndex=processor.CurrentIndex;
+                using (ArrayProcessor processor=new ArrayProcessor(compiler,tokens,currentIndex))
+                {
+                    value=processor.GetArray();
+                    currentIndex=processor.CurrentIndex;
+                }
                 processState=ValueProcessorState.Over;
                 return;
             }
@@ -49,9 +51,11 @@ namespace Kurisu.AkiBT.Compiler
             if(type.HasValue)
             {
                 currentIndex--;
-                var processor=new NodeProcessor(compiler,tokens,currentIndex);
-                value=processor.GetNode();
-                currentIndex=processor.CurrentIndex;
+                using (NodeProcessor processor=new NodeProcessor(compiler,tokens,currentIndex))
+                {
+                    value=processor.GetNode();
+                    currentIndex=processor.CurrentIndex;
+                }
                 processState=ValueProcessorState.Over;
                 return;
             }
@@ -59,9 +63,11 @@ namespace Kurisu.AkiBT.Compiler
             if(variableType.HasValue)
             {
                 currentIndex--;//回退
-                var processor=new VariableProcessor(compiler,tokens,currentIndex);
-                value=processor.GetVariable();
-                currentIndex=processor.CurrentIndex;
+                using (VariableProcessor processor=new VariableProcessor(compiler,tokens,currentIndex))
+                {
+                    value=processor.GetVariable();
+                    currentIndex=processor.CurrentIndex;
+                }
                 processState=ValueProcessorState.Over;
                 return;
             }

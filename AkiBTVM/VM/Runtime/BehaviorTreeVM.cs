@@ -15,7 +15,14 @@ namespace Kurisu.AkiBT.VM
         [SerializeField]
         private string vmCode;
         #endif
-        private AkiBTConvertor convertor=new AkiBTConvertor();
+        #if UNITY_EDITOR
+            private AkiBTConvertor convertor=new AkiBTConvertor();
+        #else
+            private AkiBTConvertor convertor;
+            private void Awake() {
+                convertor=new AkiBTConvertor();
+            }
+        # endif
         [SerializeField]
         private bool isPlaying;
         public bool IsPlaying=>isPlaying;

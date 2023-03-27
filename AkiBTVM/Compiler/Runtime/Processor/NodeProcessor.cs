@@ -68,9 +68,11 @@ namespace Kurisu.AkiBT.Compiler
         }
         private void GetNodeData()
         {
-            var processor=new DataProcessor(compiler,tokens,currentIndex);
-            currentNode.data=processor.GetData();
-            currentIndex=processor.CurrentIndex;
+            using (DataProcessor processor=new DataProcessor(compiler,tokens,currentIndex))
+            {
+                currentNode.data=processor.GetData();
+                currentIndex=processor.CurrentIndex;
+            }
             //Data结束后Node一同结束,无需额外检测
             processState=NodeProcessState.Over;
         }

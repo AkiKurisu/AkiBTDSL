@@ -18,21 +18,25 @@ namespace Kurisu.AkiBT.Compiler
                 if(TryGetVariableType().HasValue)
                 {
                     currentIndex--;
-                    var processor=new ReferencedVariableProcessor(compiler,tokens,currentIndex);
-                    currentIndex=processor.CurrentIndex;
+                    using(ReferencedVariableProcessor processor=new ReferencedVariableProcessor(compiler,tokens,currentIndex))
+                    {
+                        currentIndex=processor.CurrentIndex;
+                    }
                     continue;
                 }
                 if(TryGetNodeType().HasValue)
                 {
                     currentIndex--;
-                    var nodeProcessor=new NodeProcessor(compiler,tokens,currentIndex);
-                    var reference=nodeProcessor.GetNode();
-                    if(!rootProcessed)
+                    using(NodeProcessor nodeProcessor=new NodeProcessor(compiler,tokens,currentIndex))
                     {
-                        rootProcessed=true;
-                        ProcessRoot(reference);
+                        var reference=nodeProcessor.GetNode();
+                        if(!rootProcessed)
+                        {
+                            rootProcessed=true;
+                            ProcessRoot(reference);
+                        }
+                        currentIndex=nodeProcessor.CurrentIndex;
                     }
-                    currentIndex=nodeProcessor.CurrentIndex;
                     continue;
                 }
                 if(currentIndex>=totalCount-1)return;

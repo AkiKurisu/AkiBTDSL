@@ -1,9 +1,12 @@
 using System.Text.RegularExpressions;
-using UnityEngine;
 using Newtonsoft.Json;
 using System.Collections.Generic;
 namespace Kurisu.AkiBT.Compiler
 {
+    internal interface IReference
+    {
+        public int Rid{set;}
+    }
     [System.Serializable]
     public struct Reference
     {
@@ -14,12 +17,13 @@ namespace Kurisu.AkiBT.Compiler
         }
     }
     [System.Serializable]
-    internal class Node
+    internal class Node:IReference
     {
         /// <summary>
         /// ReferenceID由Compiler生成
         /// </summary>
         public int rid;
+        public int Rid{set=>rid=value;}
         // <summary>
         // Type根据NodeType查找获得
         // </summary>
@@ -27,12 +31,13 @@ namespace Kurisu.AkiBT.Compiler
         public Dictionary<string,object> data;
     }
     [System.Serializable]
-    internal class ReferencedVariable
+    internal class ReferencedVariable:IReference
     {
         /// <summary>
         /// ReferenceID由Compiler生成
         /// </summary>
         public int rid;
+        public int Rid{set=>rid=value;}
         // <summary>
         // Type根据NodeType查找获得
         // </summary>
@@ -48,14 +53,13 @@ namespace Kurisu.AkiBT.Compiler
     }
     public class AkiBTCompiler
     {
-        public AkiBTCompiler(string noteTypeFactoryPath)
+        public AkiBTCompiler(string noteTypeFactoryName)
         {
-            factory=new NodeTypeFactory(noteTypeFactoryPath);
+            factory=new NodeTypeFactory(noteTypeFactoryName);
         }
         public AkiBTCompiler()
         {
-            string path=Application.streamingAssetsPath+"/AkiBTTypeDictionary.json";
-            factory=new NodeTypeFactory(path);
+            factory=new NodeTypeFactory("AkiBTTypeDictionary");
         }
         private int currentID=1000;
         private Reference root;
@@ -72,11 +76,7 @@ namespace Kurisu.AkiBT.Compiler
         {
             Init();
             var tokens=Regex.Split(code,Pattern);
-            for(int i=0;i<tokens.Length;i++)
-            {
-                Debug.Log($"{i}:{tokens[i]}");
-            }
-            new AutoProcessor(this,tokens,-1);
+            new AutoProcessor(this,tokens,-1).Dispose();
             var IL=new AkiBTIL(root,referencesCache,variableReferences);
             return JsonConvert.SerializeObject(IL);
         }
@@ -90,32 +90,25 @@ namespace Kurisu.AkiBT.Compiler
         internal void RegisterRoot(Node node)
         {
             factory.GenerateType("Root",node);
-            var reference=Register(node);
-            node.rid=reference.rid;
-            //Debug.Log($"获得Root,ReferenceID:{reference.rid}");
-            this.root=reference;
+            this.root=Register(node);
         }
         internal Reference RegisterNode(string nodeType,Node node)
         {
             factory.GenerateType(nodeType,node);
-            var reference=Register(node);
-            node.rid=reference.rid;
-            //Debug.Log($"获得Node,ReferenceID:{reference.rid}");
-            return reference;
+            return Register(node);
         }
         internal Reference RegisterReferencedVariable(string variableType,ReferencedVariable variable)
         {
             factory.GenerateType("Shared"+variableType,variable);
             var reference=Register(variable);
-            variable.rid=reference.rid;
             variableReferences.Add(reference);
-            //Debug.Log($"获得Variable,ReferenceID:{reference.rid}");
             return reference;
         }
-        private Reference Register(object data)
+        private Reference Register<T>(T data)where T:IReference
         {
             referencesCache.Add(data);
             var reference=new Reference(currentID);
+            data.Rid=reference.rid;
             currentID++;
             return reference;
         }

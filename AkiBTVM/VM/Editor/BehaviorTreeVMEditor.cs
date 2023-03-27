@@ -82,7 +82,7 @@ namespace Kurisu.AkiBT.VM.Editor
         {
             if(string.IsNullOrEmpty(inputField.value))
             {
-                Debug.Log("<color=#ff2f2f>AkiBTVM</color>:Input Code Is Null!");
+                Debug.Log("<color=#ff2f2f>AkiBTVM</color>:Input Code Is Empty!");
                 return;
             }
             try

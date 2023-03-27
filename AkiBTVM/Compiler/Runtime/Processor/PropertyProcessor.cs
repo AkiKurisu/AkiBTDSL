@@ -1,5 +1,4 @@
 using System;
-using UnityEngine;
 namespace Kurisu.AkiBT.Compiler
 {
     internal class PropertyProcessor:Processor
@@ -17,7 +16,6 @@ namespace Kurisu.AkiBT.Compiler
         }
         internal (string,object) GetProperty()
         {
-            //Debug.Log("输出Propery:"+name);
             return (name,value);
         }
         private void Process()
@@ -69,9 +67,11 @@ namespace Kurisu.AkiBT.Compiler
 
         private void GetPropertyValue()
         {
-            var processor=new ValueProcessor(compiler,tokens,currentIndex);
-            value=processor.GetPropertyValue();
-            currentIndex=processor.CurrentIndex;
+            using (ValueProcessor processor=new ValueProcessor(compiler,tokens,currentIndex))
+            {
+                value=processor.GetPropertyValue();
+                currentIndex=processor.CurrentIndex;
+            }
             processState=PropertyProcessState.Over;
         }
     }

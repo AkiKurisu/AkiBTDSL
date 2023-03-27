@@ -17,7 +17,6 @@ namespace Kurisu.AkiBT.Compiler
         }
         internal Dictionary<string,object> GetData()
         {
-            //Debug.Log("输出Property:"+properties);
             return properties;
         }
         private void Process()
@@ -40,10 +39,12 @@ namespace Kurisu.AkiBT.Compiler
         }
         private void GetProperty()
         {
-            var propertyProcessor=new PropertyProcessor(compiler,tokens,currentIndex);
-            var tuple=propertyProcessor.GetProperty();
-            properties.Add(tuple.Item1,tuple.Item2);
-            currentIndex=propertyProcessor.CurrentIndex;
+            using (PropertyProcessor propertyProcessor=new PropertyProcessor(compiler,tokens,currentIndex))
+            {
+                var tuple=propertyProcessor.GetProperty();
+                properties.Add(tuple.Item1,tuple.Item2);
+                currentIndex=propertyProcessor.CurrentIndex;
+            }
             CheckValidEnd();
         }
         private void CheckValidEnd()

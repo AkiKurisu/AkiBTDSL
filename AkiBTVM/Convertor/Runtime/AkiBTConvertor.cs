@@ -17,9 +17,9 @@ namespace Kurisu.AkiBT.Convertor
         {
             compiler=new AkiBTCompiler();
         }
-        public AkiBTConvertor(string path)
+        public AkiBTConvertor(string name)
         {
-            compiler=new AkiBTCompiler(path);
+            compiler=new AkiBTCompiler(name);
         }
         private AkiBTCompiler compiler;
         public BehaviorTreeTemplate Convert(string code)
