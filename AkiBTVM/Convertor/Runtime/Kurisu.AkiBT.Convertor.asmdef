@@ -1,0 +1,17 @@
+{
+    "name": "Kurisu.AkiBT.Convertor",
+    "rootNamespace": "Kurisu.AkiBT.Convertor",
+    "references": [
+        "GUID:4a9214fa9d60c4c92bfc3c635010f27f",
+        "GUID:ea13d7331a0df234f85e126949843072"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
