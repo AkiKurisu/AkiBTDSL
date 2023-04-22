@@ -9,13 +9,15 @@ namespace Kurisu.AkiBT.Compiler
         }
         private ValueProcessorState processState;
         private object value;
-        internal ValueProcessor(AkiBTCompiler compiler, string[] tokens, int currentIndex) : base(compiler, tokens, currentIndex)
+        protected sealed override void OnInit()
         {
+            processState=ValueProcessorState.GetValue;
+            value=null;
             Process();
         }
         private void Process()
         {
-            while(currentIndex<totalCount)
+            while(CurrentIndex<TotalCount)
             {
                 switch(processState)
                 {
@@ -34,39 +36,35 @@ namespace Kurisu.AkiBT.Compiler
 
         private void GetValue()
         {
-            NextNoSpace();
+            Scanner.MoveNextNoSpace();
             //检测是否存在Children
-            if(CurrentToken==LeftBracket)
+            if(CurrentToken==Scanner.LeftBracket)
             {
-                using (ArrayProcessor processor=new ArrayProcessor(compiler,tokens,currentIndex))
+                using (ArrayProcessor processor=Compiler.GetProcessor<ArrayProcessor>(Compiler,Scanner))
                 {
                     value=processor.GetArray();
-                    currentIndex=processor.CurrentIndex;
                 }
                 processState=ValueProcessorState.Over;
                 return;
             }
             //检测是否存在Child
-            var type=TryGetNodeType();
-            if(type.HasValue)
+            if(Scanner.IsNodeType())
             {
-                currentIndex--;
-                using (NodeProcessor processor=new NodeProcessor(compiler,tokens,currentIndex))
+                Scanner.MoveBack();
+                using (NodeProcessor processor=Compiler.GetProcessor<NodeProcessor>(Compiler,Scanner))
                 {
                     value=processor.GetNode();
-                    currentIndex=processor.CurrentIndex;
                 }
                 processState=ValueProcessorState.Over;
                 return;
             }
-            var variableType=TryGetVariableType();
+            var variableType=Scanner.TryGetVariableType();
             if(variableType.HasValue)
             {
-                currentIndex--;//回退
-                using (VariableProcessor processor=new VariableProcessor(compiler,tokens,currentIndex))
+                Scanner.MoveBack();//回退
+                using (VariableProcessor processor=Compiler.GetProcessor<VariableProcessor>(Compiler,Scanner))
                 {
                     value=processor.GetVariable();
-                    currentIndex=processor.CurrentIndex;
                 }
                 processState=ValueProcessorState.Over;
                 return;
@@ -92,21 +90,21 @@ namespace Kurisu.AkiBT.Compiler
                 value=boolValue;
                 return;
             }
-            int index=currentIndex;
-            if(Vector3Helper.TryGetVector3(this,out Vector3 vector3))
+            int index=Scanner.CurrentIndex;
+            if(Scanner.TryGetVector3(out Vector3 vector3))
             {
                 value=vector3;
                 return;
             }
             //失败回退
-            currentIndex=index;
-            if(Vector2Helper.TryGetVector2(this,out Vector2 vector2))
+            Scanner.MoveTo(index);
+            if(Scanner.TryGetVector2(out Vector2 vector2))
             {
                 value=vector2;
                 return;
             }
             //失败回退
-            currentIndex=index;
+            Scanner.MoveTo(index);
             value=CurrentToken;
         }
         internal object GetPropertyValue()

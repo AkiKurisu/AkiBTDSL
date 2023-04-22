@@ -1,182 +1,221 @@
-using UnityEditor;
-using UnityEngine;
-using UnityEngine.UIElements;
-using Kurisu.AkiBT.Editor;
-using System.Collections.Generic;
 using System;
-using Newtonsoft.Json;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
+using System.Reflection;
+using Kurisu.AkiBT.Editor;
+using Newtonsoft.Json;
+using UnityEditor;
+using UnityEngine;
 namespace Kurisu.AkiBT.Compiler.Editor
 {
-internal class AkiBTCompilerEditorWindow : EditorWindow
-{
-    private TextField inputField;
-    private TextField outputField;
-    private Button compileButton;
-    private AkiBTCompiler compiler;
-    /// <summary>
-    /// You can change the file name for using differnt compile usage
-    /// </summary>
-    const string ReadFileName="AkiBTTypeDictionary";
-    private Toggle usingBehaviorTreeSettingMask;
-    private TextField editorName;
-    private TextField dictionaryName;
-    
-    [MenuItem("Tools/AkiBTVM/Compiler Editor")]
-    public static void OpenEditor()
-    {
-        GetWindow<AkiBTCompilerEditorWindow>("AkiBT Compiler Editor");
+    public class AkiBTCompilerEditorWindow : EditorWindow
+    {   
+        private class CompilerSetting
+        {
+            public bool usingBehaviorTreeSettingMask;
+            public string editorName="AkiBT";
+            public string inputCode=string.Empty;
+            public string dictionaryName="AkiBTTypeDictionary";
+        }
+        private string inputCode{get=>setting.inputCode;set=>setting.inputCode=value;}
+        private string outPutCode;
+        private Vector2 m_ScrollPosition;
+        private bool usingBehaviorTreeSettingMask{get=>setting.usingBehaviorTreeSettingMask;set=>setting.usingBehaviorTreeSettingMask=value;}
+        private string editorName{get=>setting.editorName;set=>setting.editorName=value;}
+        private string dictionaryName{get=>setting.dictionaryName;set=>setting.dictionaryName=value;}
+        private AkiBTCompiler compiler;
+        private const string KeyName="AkiBTCompilerSetting";
+        private  CompilerSetting setting;
+        [MenuItem("Tools/AkiBTVM/Compiler Editor")]
+        public static void OpenEditor()
+        {
+            GetWindow<AkiBTCompilerEditorWindow>("AkiBT Compiler Editor");
+        }
+        public delegate Vector2 BeginVerticalScrollViewFunc(Vector2 scrollPosition, bool alwaysShowVertical, GUIStyle verticalScrollbar, GUIStyle background, params GUILayoutOption[] options);
+        static BeginVerticalScrollViewFunc s_func;
+        static BeginVerticalScrollViewFunc BeginVerticalScrollView
+        {
+            get
+            {
+                if (s_func == null)
+                {
+                    var methods = typeof(EditorGUILayout).GetMethods(BindingFlags.Static | BindingFlags.NonPublic).Where(x => x.Name == "BeginVerticalScrollView").ToArray();
+                    var method = methods.First(x => x.GetParameters()[1].ParameterType == typeof(bool));
+                    s_func = (BeginVerticalScrollViewFunc)method.CreateDelegate(typeof(BeginVerticalScrollViewFunc));
+                }
+                return s_func;
+            }
+        }
+        private GUIStyle textAreaStyle;
+        private GUIStyle labelStyle;
+        private int state=2;
+        private void OnEnable() {
+            var data=EditorPrefs.GetString(KeyName);
+            setting=JsonConvert.DeserializeObject<CompilerSetting>(data);
+            if(setting==null)setting=new CompilerSetting();
+        }
+        private void OnDisable() {
+            EditorPrefs.SetString(KeyName,JsonConvert.SerializeObject(setting));
+        }
+        private void GatherStyle()
+        {
+            textAreaStyle=new GUIStyle(EditorStyles.textArea){wordWrap=true};
+            labelStyle=new GUIStyle(GUI.skin.label){richText=true};
+        }
+        private void OnGUI()
+        {
+            GatherStyle();
+            m_ScrollPosition = BeginVerticalScrollView(m_ScrollPosition, false, GUI.skin.verticalScrollbar, "OL Box");
+            EditorGUILayout.BeginVertical();
+                GUILayout.Label("Input Code");
+                inputCode=EditorGUILayout.TextArea(inputCode,textAreaStyle,GUILayout.MinHeight(200));
+                GUILayout.Label("Output Data");
+                outPutCode=EditorGUILayout.TextArea(outPutCode,textAreaStyle,GUILayout.MinHeight(100));
+                var orgColor=GUI.backgroundColor;
+                GUI.backgroundColor=new Color(140/255f, 160/255f, 250/255f);
+                if(GUILayout.Button("Compile",GUILayout.MinHeight(25)))
+                {
+                    state=0;
+                    state=Compile();
+                }
+                GUI.backgroundColor=orgColor;
+                DrawResult(state);
+            EditorGUILayout.EndVertical();
+            EditorGUILayout.EndScrollView();
+            GUILayout.BeginVertical();
+                GUILayout.BeginHorizontal();
+                GUILayout.FlexibleSpace();
+                GUILayout.Label("Dictionary Name",labelStyle);
+                dictionaryName=GUILayout.TextField(dictionaryName,GUILayout.MinWidth(100));
+                GUILayout.Label("Using Editor Mask",labelStyle);
+                GUI.enabled=usingBehaviorTreeSettingMask;
+                editorName=GUILayout.TextField(editorName,GUILayout.MinWidth(50));
+                GUI.enabled=true;
+                usingBehaviorTreeSettingMask=EditorGUILayout.ToggleLeft(string.Empty,usingBehaviorTreeSettingMask,GUILayout.Width(20));
+                GUI.backgroundColor=new Color(253/255f, 163/255f, 255/255f);
+                if(GUILayout.Button("Create Type Dictionary"))
+                {
+                    EditorApplication.delayCall += GetTypeDict;
+                }
+                GUI.backgroundColor=orgColor;
+                GUILayout.EndHorizontal();
+            GUILayout.EndVertical();
+        }
+        private void DrawResult(int state)
+        {
+            if(state==1)
+            {
+                GUILayout.Label("<color=#3aff48>AkiBTCompiler</color> : Compile Success!",labelStyle);
+            }
+            if(state==0)
+            {
+                GUILayout.Label("<color=#ff2f2f>AkiBTCompiler</color> : Compile Fail!",labelStyle);
+            }
+            if(state==-1)
+            {
+                GUILayout.Label("<color=#ff2f2f>AkiBTCompiler</color> : Input Code Is Empty!",labelStyle);
+            } 
+            if(state==-2)
+            {
+                GUILayout.Label("<color=#ff2f2f>AkiBTCompiler</color> : Type Dictionary has not generated!",labelStyle);
+            } 
+        }
+        private int Compile()
+        {
+            string fileInStreaming = $"{Application.streamingAssetsPath}/{dictionaryName}.json";
+            if(!File.Exists(fileInStreaming))
+            {
+                return -2;
+            }
+            compiler=new AkiBTCompiler(dictionaryName);
+            if(string.IsNullOrEmpty(inputCode))
+            {
+                return -1;
+            }
+            outPutCode=compiler.Compile(inputCode);
+            return 1;
+        }
+        private async void GetTypeDict()
+        {
+            IEnumerable<Type> list=SearchUtility.FindSubClassTypes(typeof(NodeBehavior));
+            string[] showGroups=null;
+            string[] notShowGroups=null;
+            if(usingBehaviorTreeSettingMask)(showGroups,notShowGroups)=BehaviorTreeSetting.GetMask(editorName);
+            if(showGroups!=null)
+            {
+                for(int i=0;i<showGroups.Length;i++)Debug.Log($"Showing Group:{showGroups[i]}");
+            }
+            if(notShowGroups!=null)
+            {
+                for(int i=0;i<notShowGroups.Length;i++)Debug.Log($"Not Showing Group:{notShowGroups[i]}");
+            }
+            var groups=list.GroupsByAkiGroup();
+            list=list.Except(groups.SelectMany(x=>x)).ToList();
+            groups=groups.SelectGroup(showGroups).ExceptGroup(notShowGroups);
+            list=list.Concat(groups.SelectMany(x=>x).Distinct()).Concat(SearchUtility.FindSubClassTypes(typeof(SharedVariable)));;
+            var nodeDict=new Dictionary<string,NodeTypeInfo>();
+            foreach(var type in list)
+            {
+                AddTypeInfo(nodeDict,type);
+            }
+            string path=$"{Application.streamingAssetsPath}/{dictionaryName}.json";
+            if(!File.Exists(Application.streamingAssetsPath))
+            {
+                Directory.CreateDirectory(Application.streamingAssetsPath);
+            }
+            Debug.Log("<color=#3aff48>AkiBTCompiler</color> : Creating AkiBT Type Dictionary...");
+            //Write to file
+            await File.WriteAllTextAsync(path,JsonConvert.SerializeObject(nodeDict,Formatting.Indented),System.Text.Encoding.UTF8);
+            Debug.Log($"<color=#3aff48>AkiBTCompiler</color> : Create Success, file path:{path}");
+        }
+        private static void AddTypeInfo(Dictionary<string,NodeTypeInfo> dict,Type type)
+        {
+            if(dict.ContainsKey(type.Name))
+            {
+                dict[$"{type.Namespace}.{type.Name}"]=GenerateTypeInfo(type);
+            }
+            else
+            {
+                dict[type.Name]=GenerateTypeInfo(type);
+            }
+        }
+        /// <summary>
+        /// You need to generate TypeDictionary before using AkiBTVM
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        private static NodeTypeInfo GenerateTypeInfo(Type type)
+        {
+            var info=new NodeTypeInfo();
+            info["class"]=type.Name;
+            info["ns"]=type.Namespace;
+            info["asm"]=type.Assembly.GetName().Name;
+            if(type.IsSubclassOf(typeof(SharedVariable)))
+            {
+                info["compileType"]="Variable";
+                return info;
+            }
+            info["compileType"]="Node";
+            type.GetFields(BindingFlags.Public | BindingFlags.Instance)
+                .Where(field => field.GetCustomAttribute<HideInEditorWindow>() == null)//根据Atrribute判断是否需要隐藏
+                .Concat(GetAllFields(type))//Concat合并列表
+                .Where(field => field.IsInitOnly == false)
+                .ToList().ForEach((p) =>
+                {
+                    var label=p.GetCustomAttribute(typeof(AkiLabelAttribute), false) as AkiLabelAttribute;
+                    info[label?.Title??p.Name]=p.Name;
+                });
+            return info;
+        }
+        private static IEnumerable<FieldInfo> GetAllFields(Type t)
+        {
+            if (t == null)
+                return Enumerable.Empty<FieldInfo>();
+
+            return t.GetFields(BindingFlags.NonPublic | BindingFlags.Instance)
+                .Where(field => field.GetCustomAttribute<SerializeField>() != null||field.GetCustomAttribute<SerializeReference>() != null)
+                .Where(field => field.GetCustomAttribute<HideInEditorWindow>() == null).Concat(GetAllFields(t.BaseType));//Concat合并列表
+        }
     }
-    internal AkiBTCompilerEditorWindow()
-    {
-        try
-        {
-            compiler=new AkiBTCompiler(ReadFileName);
-        }
-        catch(ArgumentNullException)
-        {
-            AsyncInitCompiler();
-        }
-    }
-    private async void AsyncInitCompiler()
-    {
-        await GetTypeDict();
-        compiler=new AkiBTCompiler(ReadFileName);
-        Debug.Log("AkiBT Compiler Inited Already!");
-    }
-    public void CreateGUI()
-    {
-        rootVisualElement.Add(GetTitleLabel("AkiBT Compiler"));
-        //Input
-        var scrollInput=new ScrollView();
-        scrollInput.style.minHeight=200;
-        inputField=new TextField();
-        inputField.multiline=true;
-        inputField.style.whiteSpace=WhiteSpace.Normal;
-        inputField.style.minHeight=200;
-        //Output
-        var scrollOutput=new ScrollView();
-        scrollOutput.style.minHeight=100;
-        outputField=new TextField();
-        outputField.style.minHeight=100;
-        outputField.multiline=true;
-        outputField.style.whiteSpace=WhiteSpace.Normal;
-        //Add
-        rootVisualElement.Add(GetTitleLabel("Input Code",15));
-        scrollInput.Add(inputField);
-        rootVisualElement.Add(scrollInput);
-        rootVisualElement.Add(GetTitleLabel("Output Data",15));
-        scrollOutput.Add(outputField);
-        rootVisualElement.Add(scrollOutput);
-        //Button
-        compileButton=GetButton("Compile",new Color(140/255f, 160/255f, 250/255f),Compile);
-        rootVisualElement.Add(compileButton);
-        //Type Dictionary
-        //Setting
-        usingBehaviorTreeSettingMask=new Toggle("Using BehaviorTreeSetting Mask"){tooltip="Ignoring Node Group when creating dictionary using BehaviorTreeSetting"};
-        usingBehaviorTreeSettingMask.style.fontSize=15;
-        editorName=new TextField("Editor Name"){value="AkiBT",tooltip="EditorName to use for BehaviorTreeSetting"};
-        editorName.style.fontSize=15;
-        rootVisualElement.Add(usingBehaviorTreeSettingMask);
-        rootVisualElement.Add(editorName);
-        dictionaryName=new TextField("Dictionary Name"){value=ReadFileName,tooltip=$"Output Dictionary Name, compiler editor only read default name:'{ReadFileName}'"};
-        dictionaryName.style.fontSize=15;
-        rootVisualElement.Add(dictionaryName);
-        //Button
-        var button=GetButton("Create Type Dictionary",new Color(253/255f, 163/255f, 255/255f),async ()=>await GetTypeDict());
-        rootVisualElement.Add(button);
-    }
-    private static Label GetTitleLabel(string text,int frontSize=20)
-    {
-        var label=new Label(text);
-        label.style.fontSize=frontSize;
-        return label;
-    }
-    private void Compile()
-    {
-        if(string.IsNullOrEmpty(inputField.value))
-        {
-            Debug.Log("<color=#ff2f2f>AkiBTCompiler</color>:Input Code Is Empty!");
-            return;
-        }
-        try
-        {
-            outputField.value=compiler.Compile(inputField.value);
-            Debug.Log("<color=#3aff48>AkiBTCompiler</color>:Compile Success!");
-        }
-        catch(Exception e)
-        {
-            Debug.Log("<color=#ff2f2f>AkiBTCompiler</color>:Compile Fail!");
-            throw e;
-        }
-    }
-    private async Task GetTypeDict()
-    {
-        IEnumerable<Type> list=SearchUtility.FindSubClassTypes(typeof(NodeBehavior));
-        string[] showGroups=null;
-        string[] notShowGroups=null;
-        if(usingBehaviorTreeSettingMask.value)(showGroups,notShowGroups)=BehaviorTreeSetting.GetMask(editorName.value);
-        if(showGroups!=null)
-        {
-            for(int i=0;i<showGroups.Length;i++)Debug.Log($"Showing Group:{showGroups[i]}");
-        }
-        if(notShowGroups!=null)
-        {
-            for(int i=0;i<notShowGroups.Length;i++)Debug.Log($"Not Showing Group:{notShowGroups[i]}");
-        }
-        var groups=list.GroupsByAkiGroup();
-        list=list.Except(groups.SelectMany(x=>x)).ToList();
-        groups=groups.SelectGroup(showGroups).ExceptGroup(notShowGroups);
-        list=list.Concat(groups.SelectMany(x=>x).Distinct()).Concat(SearchUtility.FindSubClassTypes(typeof(SharedVariable)));;
-        var nodeDict=new Dictionary<string,NodeTypeInfo>();
-        foreach(var type in list)
-        {
-            AddTypeInfo(nodeDict,type);
-        }
-        string path=$"{Application.streamingAssetsPath}/{dictionaryName.value}.json";
-        if(!File.Exists(Application.streamingAssetsPath))
-        {
-            Directory.CreateDirectory(Application.streamingAssetsPath);
-        }
-        Debug.Log("Creating AkiBT Type Dictionary...");
-        //Write to file
-        await File.WriteAllTextAsync(path,JsonConvert.SerializeObject(nodeDict,Formatting.Indented),System.Text.Encoding.UTF8);
-        Debug.Log($"Create Success, file path:{path}");
-    }
-    private static void AddTypeInfo(Dictionary<string,NodeTypeInfo> dict,Type type)
-    {
-        if(dict.ContainsKey(type.Name))
-        {
-            dict[$"{type.Namespace}.{type.Name}"]=GenerateTypeInfo(type);
-        }
-        else
-        {
-            dict[type.Name]=GenerateTypeInfo(type);
-        }
-    }
-    /// <summary>
-    /// You need to generate TypeDictionary before using AkiBTVM
-    /// </summary>
-    /// <param name="type"></param>
-    /// <returns></returns>
-    private static NodeTypeInfo GenerateTypeInfo(Type type)
-    {
-        var info=new NodeTypeInfo();
-        info["class"]=type.Name;
-        info["ns"]=type.Namespace;
-        info["asm"]=type.Assembly.GetName().Name;
-        return info;
-    }
-    private static Button GetButton(string text,Color? color=null,System.Action callBack=null)
-    {
-        var button=new Button();
-        if(callBack!=null)button.clicked+=callBack;
-        if(color.HasValue)button.style.backgroundColor=color.Value;
-        button.text=text;
-        button.style.fontSize=20;
-        return button;
-    }
-}
 }

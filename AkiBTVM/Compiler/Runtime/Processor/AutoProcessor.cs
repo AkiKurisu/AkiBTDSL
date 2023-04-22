@@ -4,30 +4,27 @@ namespace Kurisu.AkiBT.Compiler
     internal class AutoProcessor : Processor
     {
         private bool rootProcessed;
-        internal AutoProcessor(AkiBTCompiler compiler, string[] tokens, int currentIndex) : base(compiler, tokens, currentIndex)
+        protected sealed override void OnInit()
         {
             rootProcessed=false;
             Process();
         }
         private void Process()
         {
-            while(currentIndex<totalCount-1)
+            while(CurrentIndex<TotalCount-1)
             {
-                NextNoSpace();
-                if(currentIndex>=totalCount-1)return;
-                if(TryGetVariableType().HasValue)
+                Scanner.MoveNextNoSpace();
+                if(CurrentIndex>=TotalCount-1)return;
+                if(Scanner.TryGetVariableType().HasValue)
                 {
-                    currentIndex--;
-                    using(ReferencedVariableProcessor processor=new ReferencedVariableProcessor(compiler,tokens,currentIndex))
-                    {
-                        currentIndex=processor.CurrentIndex;
-                    }
+                    Scanner.MoveBack();
+                    using(ReferencedVariableProcessor processor=Compiler.GetProcessor<ReferencedVariableProcessor>(Compiler,Scanner)){};
                     continue;
                 }
-                if(TryGetNodeType().HasValue)
+                if(Scanner.IsNodeType())
                 {
-                    currentIndex--;
-                    using(NodeProcessor nodeProcessor=new NodeProcessor(compiler,tokens,currentIndex))
+                    Scanner.MoveBack();
+                    using(NodeProcessor nodeProcessor=Compiler.GetProcessor<NodeProcessor>(Compiler,Scanner))
                     {
                         var reference=nodeProcessor.GetNode();
                         if(!rootProcessed)
@@ -35,12 +32,9 @@ namespace Kurisu.AkiBT.Compiler
                             rootProcessed=true;
                             ProcessRoot(reference);
                         }
-                        currentIndex=nodeProcessor.CurrentIndex;
                     }
                     continue;
                 }
-                if(currentIndex>=totalCount-1)return;
-                    throw new System.Exception($"无效字符'{CurrentToken}'");
             }
         }
         private void ProcessRoot(Reference reference)
@@ -48,7 +42,7 @@ namespace Kurisu.AkiBT.Compiler
             var node=new Node();
             node.data=new Dictionary<string, object>();
             node.data["child"]=reference;
-            compiler.RegisterRoot(node);
+            Compiler.RegisterRoot(node);
         }
     }
 }

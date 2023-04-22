@@ -10,8 +10,9 @@ namespace Kurisu.AkiBT.Compiler
             PropertyName,PropertyValue,Over
         }
         private PropertyProcessState processState;
-        internal PropertyProcessor(AkiBTCompiler compiler,string[] tokens,int currentIndex):base(compiler,tokens,currentIndex)
+        protected sealed override void OnInit()
         {
+            processState=PropertyProcessState.PropertyName;
             Process();
         }
         internal (string,object) GetProperty()
@@ -20,7 +21,7 @@ namespace Kurisu.AkiBT.Compiler
         }
         private void Process()
         {
-            while(currentIndex<totalCount)
+            while(CurrentIndex<TotalCount)
             {
                 switch(processState)
                 {
@@ -44,7 +45,7 @@ namespace Kurisu.AkiBT.Compiler
 
         private void GetPropertyName()
         {
-            NextNoSpace();
+            Scanner.MoveNextNoSpace();
             name=CurrentToken;
             CheckValidPair();
         }
@@ -53,24 +54,23 @@ namespace Kurisu.AkiBT.Compiler
         /// </summary>
         private void CheckValidPair()
         {
-            NextNoSpace();
+            Scanner.MoveNextNoSpace();
             try
             {
-                FindToken(Colon);
+                Scanner.FindToken(Scanner.Colon);
             }
             catch
             {
-                throw new Exception($"语法错误,找不到配对符号'{Colon}'");
+                throw new Exception($"语法错误,找不到配对符号'{Scanner.Colon}'");
             }
             processState=PropertyProcessState.PropertyValue;
         }
 
         private void GetPropertyValue()
         {
-            using (ValueProcessor processor=new ValueProcessor(compiler,tokens,currentIndex))
+            using (ValueProcessor processor=Compiler.GetProcessor<ValueProcessor>(Compiler,Scanner))
             {
                 value=processor.GetPropertyValue();
-                currentIndex=processor.CurrentIndex;
             }
             processState=PropertyProcessState.Over;
         }

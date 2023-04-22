@@ -1,32 +1,27 @@
-using System;
 namespace Kurisu.AkiBT.Compiler
 {
     internal class NodeProcessor:Processor
     {
-        private Node currentNode;
+        private Node currentNode=new Node();
         private enum NodeProcessState
         {
-            Check,GetType,GetData,Over
+            GetType,GetData,Over
         }
         private NodeProcessState processState;
         public string nodeType=string.Empty;
-        internal NodeProcessor(AkiBTCompiler compiler,string[] tokens,int currentIndex):base(compiler,tokens,currentIndex)
+        protected override void OnInit()
         {
-            currentNode=new Node();
-            processState=NodeProcessState.Check;   
+            currentNode.data=null;
+            currentNode.type=null;
+            processState=NodeProcessState.GetType;   
             Process();
         }
         private void Process()
         {
-            while(currentIndex<totalCount)
+            while(CurrentIndex<TotalCount)
             {
                 switch(processState)
                 {
-                    case NodeProcessState.Check:
-                    {
-                        CheckVaildInit();
-                        break;
-                    }
                     case NodeProcessState.GetType:
                     {
                         GetNodeType();
@@ -44,41 +39,30 @@ namespace Kurisu.AkiBT.Compiler
                 }
             }
         }
-        private void CheckVaildInit()
-        {
-            NextNoSpace();
-            var type=TryGetNodeType();
-            if(!type.HasValue)
-            {
-                throw new Exception("语法错误,没有申明结点类型");
-            }
-            processState=NodeProcessState.GetType;
-        }
         private void GetNodeType()
         {
-            NextNoSpace();
+            Scanner.MoveNextNoSpace();
             nodeType=CurrentToken;
             CheckValidStart();
         }
         private void CheckValidStart()
         {
-            NextNoSpace();
-            FindToken(LeftParenthesis);
+            Scanner.MoveNextNoSpace();
+            Scanner.FindToken(Scanner.LeftParenthesis);
             processState=NodeProcessState.GetData;
         }
         private void GetNodeData()
         {
-            using (DataProcessor processor=new DataProcessor(compiler,tokens,currentIndex))
+            using (DataProcessor processor=Compiler.GetProcessor<DataProcessor>(Compiler,Scanner))
             {
                 currentNode.data=processor.GetData();
-                currentIndex=processor.CurrentIndex;
             }
             //Data结束后Node一同结束,无需额外检测
             processState=NodeProcessState.Over;
         }
         internal Reference GetNode()
         {
-            return compiler.RegisterNode(nodeType,currentNode);
+            return Compiler.RegisterNode(nodeType,currentNode);
         }
     }
 }

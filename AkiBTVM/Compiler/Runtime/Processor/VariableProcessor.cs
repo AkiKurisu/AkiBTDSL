@@ -9,16 +9,19 @@ namespace Kurisu.AkiBT.Compiler
         }
         private const string SharedToken="=>";
         private VariableProcessState processState;
-        private Variable currentVariable;
+        private Variable currentVariable=new Variable();
         private VariableCompileType variableType;
-        internal VariableProcessor(AkiBTCompiler compiler, string[] tokens, int currentIndex) : base(compiler, tokens, currentIndex)
+        protected sealed override void OnInit()
         {
-            currentVariable=new Variable();
+            processState=VariableProcessState.GetType;
+            currentVariable.isShared=false;
+            currentVariable.mName=string.Empty;
+            currentVariable.value=null;
             Process();
         }
         private void Process()
         {
-            while(currentIndex<totalCount)
+            while(CurrentIndex<TotalCount)
             {
                 switch(processState)
                 {
@@ -46,8 +49,8 @@ namespace Kurisu.AkiBT.Compiler
         }
         private void CheckVaildType()
         {
-            NextNoSpace();
-            var type=TryGetVariableType();
+            Scanner.MoveNextNoSpace();
+            var type=Scanner.TryGetVariableType();
             if(!type.HasValue)
             {
                 throw new Exception("语法错误,没有申明变量类型");
@@ -57,11 +60,11 @@ namespace Kurisu.AkiBT.Compiler
         }
         private void CheckIsShared()
         {
-            NextNoSpace();
+            Scanner.MoveNextNoSpace();
             try{
-                FindToken(SharedToken);
+                Scanner.FindToken(SharedToken);
                 currentVariable.isShared=true;
-                NextNoSpace();
+                Scanner.MoveNextNoSpace();
                 currentVariable.mName=CurrentToken;
                 GetDefaultValue();
                 processState=VariableProcessState.Over;
@@ -69,7 +72,7 @@ namespace Kurisu.AkiBT.Compiler
             }
             catch
             {
-                currentIndex--;
+                Scanner.MoveBack();
                 processState=VariableProcessState.GetValue;
                 return;
             }
@@ -107,7 +110,7 @@ namespace Kurisu.AkiBT.Compiler
         }
         private void GetValue()
         {
-            NextNoSpace();
+            Scanner.MoveNextNoSpace();
             //根据类型转换字符串
             switch(variableType)
             {
@@ -133,7 +136,7 @@ namespace Kurisu.AkiBT.Compiler
                 }
                 case VariableCompileType.Vector3:
                 {
-                    currentVariable.value=Vector3Helper.GetVector3(this);
+                    currentVariable.value=Scanner.GetVector3();
                     break;
                 }
             }

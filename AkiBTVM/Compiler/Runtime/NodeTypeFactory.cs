@@ -4,20 +4,21 @@ using System;
 using Newtonsoft.Json;
 using UnityEngine;
 using UnityEngine.Networking;
+using System.Linq;
 using System.Threading.Tasks;
 namespace Kurisu.AkiBT.Compiler
 {
-    public class NodeTypeInfo:Dictionary<string,string>
-    {
-        
-    }
+    public class NodeTypeInfo:Dictionary<string,string>{}
     internal class NodeTypeFactory
     {
-        private class NodeTypeDictionary:Dictionary<string,NodeTypeInfo>
-        {
-            
-        }
+        private class NodeTypeDictionary:Dictionary<string,NodeTypeInfo>{}
         private NodeTypeDictionary nodeTypeDict;
+        private const string TypeKey="compileType";
+        private const string Node="Node";
+        private const string Variable="Variable";
+        private const string ClassKey="class";
+        private const string NameSpaceKey="ns";
+        private const string AssemblyKey="as";
         internal NodeTypeFactory(string dictionaryName)
         {
             string fileInStreaming = $"{Application.streamingAssetsPath}/{dictionaryName}.json";
@@ -64,12 +65,38 @@ namespace Kurisu.AkiBT.Compiler
         }
         internal void GenerateType(string nodeType,Node node)
         {
+            if(!nodeTypeDict.ContainsKey(nodeType))
+            {
+                throw new Exception($"<color=#ff2f2f>AkiBTCompiler</color> : Can't find NodeType:{nodeType} in the Type Dictionary!");
+            }
+            node.type=new Dictionary<string, string>();
+            node.type["class"]=nodeTypeDict[nodeType]["class"];
+            node.type["ns"]=nodeTypeDict[nodeType]["ns"];
+            node.type["asm"]=nodeTypeDict[nodeType]["asm"];
+            var list=node.data.Keys.ToArray();
+            foreach(var key in list)
+            {
+                if(key==ClassKey||key==NameSpaceKey||key==AssemblyKey)continue;
+                if(nodeTypeDict[nodeType].ContainsKey(key))
+                {
+                    var data=node.data[key];
+                    node.data.Remove(key);
+                    node.data[nodeTypeDict[nodeType][key]]=data;
+                }
+                else
+                {
+                    Debug.LogWarning($"<color=#ff2f2f>AkiBTCompiler</color> : Can't find Property:{key} in Type Dictionary:{nodeType}, value will be discarded. ");
+                    node.data.Remove(key);
+                }
+            }
+        }
+        internal bool IsNode(string nodeType)
+        {
             if(nodeTypeDict.ContainsKey(nodeType))
             {
-                node.type=nodeTypeDict[nodeType];
-                return;
+                return nodeTypeDict[nodeType][TypeKey]==Node;
             }
-            throw new Exception($"Can't find NodeType:{nodeType} in the NodeTypeDictionary!");
+            return false;
         }
         internal void GenerateType(string variableType,ReferencedVariable variable)
         {
@@ -78,7 +105,7 @@ namespace Kurisu.AkiBT.Compiler
                 variable.type=nodeTypeDict[variableType];
                 return;
             }
-            throw new Exception($"Can't find VariableType:{variableType} in the NodeTypeDictionary!");
+            throw new Exception($"<color=#ff2f2f>AkiBTCompiler</color> : Can't find VariableType:{variableType} in the Type Dictionary!");
         }
     }
 }

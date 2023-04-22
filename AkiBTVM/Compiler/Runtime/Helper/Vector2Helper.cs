@@ -17,11 +17,11 @@ namespace Kurisu.AkiBT.Compiler
     }
     internal class Vector2Helper
     {
-        internal static bool TryGetVector2(Processor processor,out Vector2 vector2)
+        internal static bool TryGetVector2(Scanner scanner,out Vector2 vector2)
         {
             try
             {
-               vector2=GetVector2(processor);
+               vector2=GetVector2(scanner);
                return true;
             }
             catch
@@ -30,28 +30,28 @@ namespace Kurisu.AkiBT.Compiler
                 return false;
             }
         }
-        internal static Vector2 GetVector2(Processor processor)
+        internal static Vector2 GetVector2(Scanner scanner)
         {
             float x,y;
-            if(processor.CurrentToken!=Processor.LeftParenthesis)
+            if(scanner.CurrentToken!=Scanner.LeftParenthesis)
             {
                 throw new Exception("语法错误,Vector2缺少'('");
             }
             try
             {
-                processor.NextNoSpace();
-                x=float.Parse(processor.CurrentToken);
-                processor.NextNoSpace();
-                processor.FindToken(Processor.Comma);
-                processor.NextNoSpace();
-                y=float.Parse(processor.CurrentToken);
+                scanner.MoveNextNoSpace();
+                x=float.Parse(scanner.CurrentToken);
+                scanner.MoveNextNoSpace();
+                scanner.FindToken(Scanner.Comma);
+                scanner.MoveNextNoSpace();
+                y=float.Parse(scanner.CurrentToken);
             }
             catch
             {
                 throw new Exception("语法错误,无法识别出Vector2");
             }
-            processor.NextNoSpace();
-            if(processor.CurrentToken!=Processor.RightParenthesis)
+            scanner.MoveNextNoSpace();
+            if(scanner.CurrentToken!=Scanner.RightParenthesis)
             {
                 throw new Exception("语法错误,Vector2缺少')'");
             }

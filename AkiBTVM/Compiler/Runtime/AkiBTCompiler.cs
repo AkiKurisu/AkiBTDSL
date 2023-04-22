@@ -1,5 +1,7 @@
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
+using UnityEngine;
+using System;
 using System.Collections.Generic;
 namespace Kurisu.AkiBT.Compiler
 {
@@ -67,17 +69,21 @@ namespace Kurisu.AkiBT.Compiler
         private List<object> referencesCache=new List<object>();
         private const string Pattern= @"(\(|\)|\[|\,|\:|\]| |\n|\r|=>|\t)";
         private readonly NodeTypeFactory factory;
+        private readonly Dictionary<string,Queue<Processor>>processorPool=new Dictionary<string, Queue<Processor>>();
+        private readonly Dictionary<string,Queue<Processor>>recyclePool=new Dictionary<string, Queue<Processor>>();
+        private Scanner scanner=new Scanner();
         /// <summary>
-        /// 输出AkiBTIL
+        /// Get AkiBTIL
         /// </summary>
-        /// <param name="code">输入AkiBTCode</param>
+        /// <param name="code">Input AkiBTCode</param>
         /// <returns>AkiBTIL</returns>
         public string Compile(string code)
         {
             Init();
-            var tokens=Regex.Split(code,Pattern);
-            new AutoProcessor(this,tokens,-1).Dispose();
+            scanner.Init(this,Regex.Split(code,Pattern));
+            using(GetProcessor<AutoProcessor>(this,scanner)){};
             var IL=new AkiBTIL(root,referencesCache,variableReferences);
+            RecycleProcessor();
             return JsonConvert.SerializeObject(IL);
         }
         private void Init()
@@ -111,6 +117,58 @@ namespace Kurisu.AkiBT.Compiler
             data.Rid=reference.rid;
             currentID++;
             return reference;
+        }
+        internal bool IsNode(string nodeType)
+        {
+            return factory.IsNode(nodeType);
+        }
+        internal T GetProcessor<T>(AkiBTCompiler compiler,Scanner scanner)where T : Processor, new()
+        {
+            var processor=GetProcessor<T>();
+            processor.Init(compiler,scanner);
+            return processor;
+        }
+        private T GetProcessor<T>() where T : Processor, new()
+        {
+            T obj;
+            if (CheckCache<T>())
+            {
+                string name = typeof(T).FullName;
+                obj = (T)recyclePool[name].Dequeue();
+                return obj;
+            }
+            else
+            {
+                return new T();
+            }
+        }
+        private bool CheckCache<T>()where T : Processor
+        {
+            string name = typeof(T).FullName;
+            return recyclePool.ContainsKey(name) && recyclePool[name].Count > 0;
+        }
+        private void RecycleProcessor()
+        {
+            foreach(var pair in processorPool)
+            {
+                if(!recyclePool.ContainsKey(pair.Key))recyclePool.Add(pair.Key,new Queue<Processor>());
+                recyclePool[pair.Key].Clear();
+                int count=pair.Value.Count;
+                while(count>0)
+                {
+                    recyclePool[pair.Key].Enqueue(pair.Value.Dequeue());
+                    count--;
+                }
+            }
+        }
+        internal void PushProcessor(Processor processor)
+        {
+            string name = processor.GetType().FullName;
+            if (!processorPool.ContainsKey(name))
+            {
+                processorPool.Add(name, new Queue<Processor>());
+            }
+            processorPool[name].Enqueue(processor);
         }
     }
 }

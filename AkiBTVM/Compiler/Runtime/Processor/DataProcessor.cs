@@ -4,15 +4,16 @@ namespace Kurisu.AkiBT.Compiler
 {
     internal class DataProcessor:Processor
     {
-        public Dictionary<string,object> properties;
+        public Dictionary<string,object> properties=new Dictionary<string, object>();
         private enum DataProcessState
         {
             GetProperty,Over
         }
         private DataProcessState processState;
-        internal DataProcessor(AkiBTCompiler compiler,string[] tokens,int currentIndex):base(compiler,tokens,currentIndex)
-        {   
-            properties=new Dictionary<string,object>();
+        protected sealed override void OnInit()
+        {
+            processState=DataProcessState.GetProperty;
+            properties.Clear();
             Process();
         }
         internal Dictionary<string,object> GetData()
@@ -21,7 +22,7 @@ namespace Kurisu.AkiBT.Compiler
         }
         private void Process()
         {
-            while(currentIndex<totalCount)
+            while(CurrentIndex<TotalCount)
             {
                 switch(processState)
                 {
@@ -39,23 +40,22 @@ namespace Kurisu.AkiBT.Compiler
         }
         private void GetProperty()
         {
-            using (PropertyProcessor propertyProcessor=new PropertyProcessor(compiler,tokens,currentIndex))
+            using (PropertyProcessor propertyProcessor=Compiler.GetProcessor<PropertyProcessor>(Compiler,Scanner))
             {
                 var tuple=propertyProcessor.GetProperty();
                 properties.Add(tuple.Item1,tuple.Item2);
-                currentIndex=propertyProcessor.CurrentIndex;
             }
             CheckValidEnd();
         }
         private void CheckValidEnd()
         {
-            NextNoSpace();
-            if(CurrentToken==RightParenthesis)
+            Scanner.MoveNextNoSpace();
+            if(CurrentToken==Scanner.RightParenthesis)
             {
                 processState=DataProcessState.Over;
                 return;
             }
-            if(CurrentToken==Comma)
+            if(CurrentToken==Scanner.Comma)
             {
                 return;
             }

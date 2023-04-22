@@ -19,11 +19,11 @@ namespace Kurisu.AkiBT.Compiler
     }
     internal class Vector3Helper
     {
-        internal static bool TryGetVector3(Processor processor,out Vector3 vector3)
+        internal static bool TryGetVector3(Scanner scanner,out Vector3 vector3)
         {
             try
             {
-               vector3=GetVector3(processor);
+               vector3=GetVector3(scanner);
                return true;
             }
             catch
@@ -33,32 +33,32 @@ namespace Kurisu.AkiBT.Compiler
             }
            
         }
-        internal static Vector3 GetVector3(Processor processor)
+        internal static Vector3 GetVector3(Scanner scanner)
         {
             float x,y,z;
-            if(processor.CurrentToken!=Processor.LeftParenthesis)
+            if(scanner.CurrentToken!=Scanner.LeftParenthesis)
             {
                 throw new Exception("语法错误,Vector3缺少'('");
             }
             try
             {
-                processor.NextNoSpace();
-                x=float.Parse(processor.CurrentToken);
-                processor.NextNoSpace();
-                processor.FindToken(Processor.Comma);
-                processor.NextNoSpace();
-                y=float.Parse(processor.CurrentToken);
-                processor.NextNoSpace();
-                processor.FindToken(Processor.Comma);
-                processor.NextNoSpace();
-                z=float.Parse(processor.CurrentToken);
+                scanner.MoveNextNoSpace();
+                x=float.Parse(scanner.CurrentToken);
+                scanner.MoveNextNoSpace();
+                scanner.FindToken(Scanner.Comma);
+                scanner.MoveNextNoSpace();
+                y=float.Parse(scanner.CurrentToken);
+                scanner.MoveNextNoSpace();
+                scanner.FindToken(Scanner.Comma);
+                scanner.MoveNextNoSpace();
+                z=float.Parse(scanner.CurrentToken);
             }
             catch
             {
                 throw new Exception("语法错误,无法识别出Vector3");
             }
-            processor.NextNoSpace();
-            if(processor.CurrentToken!=Processor.RightParenthesis)
+            scanner.MoveNextNoSpace();
+            if(scanner.CurrentToken!=Scanner.RightParenthesis)
             {
                 throw new Exception("语法错误,Vector3缺少')'");
             }

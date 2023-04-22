@@ -4,20 +4,21 @@ namespace Kurisu.AkiBT.Compiler
 {
     internal class ArrayProcessor : Processor
     {
-        private List<object> childCache;
-        internal ArrayProcessor(AkiBTCompiler compiler, string[] tokens, int currentIndex) : base(compiler, tokens, currentIndex)
-        {
-            childCache=new List<object>();
-            Process();
-        }
+        private List<object> childCache=new List<object>();
         private enum ArrayProcessState
         {
             GetChild,Over
         }
         private ArrayProcessState processState;
+        protected sealed override void OnInit()
+        {
+            childCache.Clear();
+            processState=ArrayProcessState.GetChild;
+            Process();
+        }
         private void Process()
         {
-            while(currentIndex<totalCount)
+            while(CurrentIndex<TotalCount)
             {
                 switch(processState)
                 {
@@ -35,37 +36,34 @@ namespace Kurisu.AkiBT.Compiler
         }
         private void GetChild()
         {
-            NextNoSpace();
-            var type=TryGetNodeType();
-            if(type.HasValue)
+            Scanner.MoveNextNoSpace();
+            if(Scanner.IsNodeType())
             {
-                currentIndex--;
-                using(NodeProcessor processor=new NodeProcessor(compiler,tokens,currentIndex))
+                Scanner.MoveBack();
+                using(NodeProcessor processor=Compiler.GetProcessor<NodeProcessor>(Compiler,Scanner))
                 {
                     childCache.Add(processor.GetNode());
-                    currentIndex=processor.CurrentIndex;
                 }
             }
             else
             {
-                currentIndex--;
-                using(ValueProcessor processor=new ValueProcessor(compiler,tokens,currentIndex))
+                Scanner.MoveBack();
+                using(ValueProcessor processor=Compiler.GetProcessor<ValueProcessor>(Compiler,Scanner))
                 {
                     childCache.Add(processor.GetPropertyValue());
-                    currentIndex=processor.CurrentIndex;
                 }
             }
-            NextNoSpace();
-            if(CurrentToken==RightBracket)
+            Scanner.MoveNextNoSpace();
+            if(CurrentToken==Scanner.RightBracket)
             {
                 processState=ArrayProcessState.Over;
                 return;
             }
-            if(CurrentToken==Comma)
+            if(CurrentToken==Scanner.Comma)
             {
                 return;
             }
-            throw new Exception("语法错误,找不到下一个有效字符");
+            throw new Exception($"<color=#ff2f2f>AkiBTCompiler</color> : 语法错误,找不到下一个有效字符");
         }
         internal object[] GetArray()
         {

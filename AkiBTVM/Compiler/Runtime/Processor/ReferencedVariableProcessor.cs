@@ -8,20 +8,23 @@ namespace Kurisu.AkiBT.Compiler
             GetType,GetName,GetValue,Over
         }
         private VariableProcessState processState;
-        private ReferencedVariable currentVariable;
+        private ReferencedVariable currentVariable=new ReferencedVariable();
         private VariableCompileType variableType;
         private string type;
         private object Value{set=>currentVariable.data["value"]=value;}
         private object Name{set=>currentVariable.data["mName"]=value;}
-        public ReferencedVariableProcessor(AkiBTCompiler compiler, string[] tokens, int currentIndex) : base(compiler, tokens, currentIndex)
+        protected sealed override void OnInit()
         {
-            currentVariable=new ReferencedVariable();
+            processState=VariableProcessState.GetType;
+            type=null;
+            currentVariable.type=null;
+            currentVariable.data.Clear();
             currentVariable.data["isShared"]=true;
             Process();
         }
         private void Process()
         {
-            while(currentIndex<totalCount)
+            while(CurrentIndex<TotalCount)
             {
                 switch(processState)
                 {
@@ -42,7 +45,7 @@ namespace Kurisu.AkiBT.Compiler
                     }
                     case VariableProcessState.Over:
                     {
-                        compiler.RegisterReferencedVariable(type,currentVariable);
+                        Compiler.RegisterReferencedVariable(type,currentVariable);
                         return;
                     }
                 }
@@ -51,11 +54,11 @@ namespace Kurisu.AkiBT.Compiler
 
         private void GetVariableType()
         {
-            NextNoSpace();
-            var type=TryGetVariableType();
+            Scanner.MoveNextNoSpace();
+            var type=Scanner.TryGetVariableType();
             if(!type.HasValue)
             {
-                throw new Exception("语法错误,没有申明变量类型");
+                throw new Exception($"<color=#ff2f2f>AkiBTCompiler</color> : 语法错误,没有申明变量类型");
             }
             variableType=type.Value;
             this.type=CurrentToken;
@@ -63,14 +66,14 @@ namespace Kurisu.AkiBT.Compiler
         }  
         private void GetName()
         {
-            NextNoSpace();
+            Scanner.MoveNextNoSpace();
             Name=CurrentToken;
             processState=VariableProcessState.GetValue;
         }
 
         private void GetValue()
         {
-            NextNoSpace();
+            Scanner.MoveNextNoSpace();
             //根据类型转换字符串
             switch(variableType)
             {
@@ -96,12 +99,12 @@ namespace Kurisu.AkiBT.Compiler
                 }
                 case VariableCompileType.Vector3:
                 {
-                    Value=Vector3Helper.GetVector3(this);
+                    Value=Scanner.GetVector3();
                     break;
                 }
                 default:
                 {
-                    throw new Exception($"无法识别类型,当前字符{CurrentToken}");
+                    throw new Exception($"<color=#ff2f2f>AkiBTCompiler</color> : 无法识别类型,当前字符{CurrentToken}");
                 }
             }
             processState=VariableProcessState.Over;

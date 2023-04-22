@@ -51,7 +51,7 @@ namespace Kurisu.AkiBT.VM
             catch(Exception e)
             {
                 behaviorTreeSO=null;
-                throw e;
+                Debug.LogError(e);
             }
         }
         public void Clear()
