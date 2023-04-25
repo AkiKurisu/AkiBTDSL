@@ -100,29 +100,29 @@ Vector3 destination (0,0,0)
 Vector3 myPos (0,0,0)
 Float distance 1
 Vector3 subtract (0,0,0)
-Composite Parallel(children:[
-	Composite Sequence(children:[
-		Action Vector3Random(xRange:(-10,10),yRange:(0,0),zRange:(-10,10),operation:1,
+Parallel(children:[
+	Sequence(children:[
+		Vector3Random(xRange:(-10,10),yRange:(0,0),zRange:(-10,10),operation:1,
 		storeResult: Vector3=>destination ),
-		Action DebugLog(logText:String Patrol获取了新位置),
-		Action TimeWait(waitTime:Float 10)
+		DebugLog(logText:String Patrol获取了新位置),
+		TimeWait(waitTime:Float 10)
 	]),
-	Composite Sequence(children:[
-		Composite Sequence(children:[
-			Action TransformGetPosition(storeResult:Vector3=>myPos),
-			Action Vector3Operator(operation:1,firstVector3:Vector3=>myPos,
+	Sequence(children:[
+		Sequence(children:[
+			TransformGetPosition(storeResult:Vector3=>myPos),
+			Vector3Operator(operation:1,firstVector3:Vector3=>myPos,
 				secondVector3:Vector3=>destination,storeResult:Vector3=>subtract),
-			Action Vector3GetSqrMagnitude(vector3:Vector3=>subtract,result:Float=>distance)
+			Vector3GetSqrMagnitude(vector3:Vector3=>subtract,result:Float=>distance)
 		]),
-		Composite Selector(abortOnConditionChanged: false, children:[
-			Conditional FloatComparison(evaluateOnRunning:false,float1:Float=>distance,
+		Selector(abortOnConditionChanged: false, children:[
+			FloatComparison(evaluateOnRunning:false,float1:Float=>distance,
 				float2:Float 4,operation:5,child:
-				Composite Sequence(abortOnConditionChanged:false,children:[
-					Action NavmeshStopAgent(isStopped:Bool false),
-					Action NavmeshSetDestination(destination:Vector3=>destination)
+				Sequence(abortOnConditionChanged:false,children:[
+					NavmeshStopAgent(isStopped:Bool false),
+					NavmeshSetDestination(destination:Vector3=>destination)
 				])
 			),
-			Action NavmeshStopAgent(isStopped:Bool true)
+			NavmeshStopAgent(isStopped:Bool true)
 		])
 	])
 ])
@@ -141,26 +141,26 @@ The main body of AkiBTCode can be divided into two parts, public variables and n
 
 For nodes, we will skip the Root node (because all behavior trees enter from the Root), and start writing directly from the Root's child nodes.
 
-对于结点，你需要申明其类型、名称索引（可以通过自定义TypeDictionary修改，见后文）
+对于结点，你需要申明其类型（名称索引,可以通过自定义TypeDictionary修改，见后文）
 
-For a node, you need to declare its type, name index (can be modified by customizing TypeDictionary, see below)
+For a node, you need to declare its type (name index, can be modified by customizing TypeDictionary, see below)
 
-对于不使用结点默认值的普通变量，你需要申明其名称并添加':'后进行赋值
+对于不使用结点默认值的普通变量，你需要申明其名称（可以使用AkiLabelAttribute进行名称替换）并添加':'后进行赋值
 
-For ordinary variables that do not use the default value of the node, you need to declare its name and add ':' to assign
+For ordinary variables that do not use the default value of the node, you need to declare its name (or use AkiLabelAttribute to alter field's name) and add ':' to assign
 
 对于结点中的共享变量，你需要额外申明其类型，如果不需要引用公共变量的共享变量则直接进行赋值，例如
 
 For the shared variable in the node, you need to declare its type additionally. If you don’t need to refer to the shared variable of the public variable, you can assign it directly, for example
 
 ```
-Action TimeWait(waitTime:Float 10)
+TimeWait(waitTime:Float 10)
 ```
 对于需要引用的共享变量，则使用'=>'符号加上需要引用的公共变量名称，例如
 
 For shared variables that need to be referenced, use the '=>' symbol plus the name of the public variable that needs to be referenced, for example
 ```
-Action NavmeshSetDestination(destination:Vector3=>destination)
+NavmeshSetDestination(destination:Vector3=>destination)
 ```
 #
 
@@ -170,9 +170,35 @@ AkiBTVM的编译依赖于AkiBTCompiler提前生成的TypeDictionary,一个Json�
 因此你完全可以通过修改TypeDictionary中的结点名称实现更简洁的脚本编写，例如使用中文结点名称，也许会得到下面这样的结果。
 
 ```
-Composite 序列 (children:[
-    Action 获取玩家位置 (),
-    Action 移动至玩家()
+Vector3 目标位置 (0,0,0)
+Vector3 我的位置 (0,0,0)
+Float 距离 1
+Vector3 差值 (0,0,0)
+平行(children:[
+	序列(children:[
+		Vector3随机(xRange:(-10,10),yRange:(0,0),zRange:(-10,10),operation:1,
+		存储变量: Vector3=>目标位置 ),
+		DebugLog(Log文本:String Patrol获取了新位置),
+		等待(等待时间:Float 10)
+	]),
+	序列(children:[
+		序列(children:[
+			获取位置(存储变量:Vector3=>我的位置),
+			Vector3Operator(operation:1,firstVector3:Vector3=>我的位置,
+				secondVector3:Vector3=>目标位置,storeResult:Vector3=>差值),
+			Vector3GetSqrMagnitude(vector3:Vector3=>差值,result:Float=>距离)
+		]),
+		选择(abortOnConditionChanged: false, children:[
+			Float比较(evaluateOnRunning:false,float1:Float=>距离,
+				float2:Float 4,operation:5,child:
+				序列(abortOnConditionChanged:false,children:[
+					停止寻路(停止:Bool false),
+					设置寻路目标(目标:Vector3=>目标位置)
+				])
+			),
+			停止寻路(停止:Bool true)
+		])
+	])
 ])
 ```
 

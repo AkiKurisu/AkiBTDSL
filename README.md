@@ -154,13 +154,13 @@ For ordinary variables that do not use the default value of the node, you need t
 For the shared variable in the node, you need to declare its type additionally. If you don’t need to refer to the shared variable of the public variable, you can assign it directly, for example
 
 ```
-Action TimeWait(waitTime:Float 10)
+TimeWait(waitTime:Float 10)
 ```
 对于需要引用的共享变量，则使用'=>'符号加上需要引用的公共变量名称，例如
 
 For shared variables that need to be referenced, use the '=>' symbol plus the name of the public variable that needs to be referenced, for example
 ```
-Action NavmeshSetDestination(destination:Vector3=>destination)
+NavmeshSetDestination(destination:Vector3=>destination)
 ```
 #
 
@@ -170,10 +170,35 @@ AkiBTVM的编译依赖于AkiBTCompiler提前生成的TypeDictionary,一个Json�
 因此你完全可以通过修改TypeDictionary中的结点名称实现更简洁的脚本编写，例如使用中文结点名称，也许会得到下面这样的结果。
 
 ```
-Vector3 玩家位置 (0,0,0)
-序列 (children:[
-    获取玩家位置 (位置:Vector3=>玩家位置),
-    移动至玩家(目标:Vector3=>玩家位置)
+Vector3 目标位置 (0,0,0)
+Vector3 我的位置 (0,0,0)
+Float 距离 1
+Vector3 差值 (0,0,0)
+平行(children:[
+	序列(children:[
+		Vector3随机(xRange:(-10,10),yRange:(0,0),zRange:(-10,10),operation:1,
+		存储变量: Vector3=>目标位置 ),
+		DebugLog(Log文本:String Patrol获取了新位置),
+		等待(等待时间:Float 10)
+	]),
+	序列(children:[
+		序列(children:[
+			获取位置(存储变量:Vector3=>我的位置),
+			Vector3Operator(operation:1,firstVector3:Vector3=>我的位置,
+				secondVector3:Vector3=>目标位置,storeResult:Vector3=>差值),
+			Vector3GetSqrMagnitude(vector3:Vector3=>差值,result:Float=>距离)
+		]),
+		选择(abortOnConditionChanged: false, children:[
+			Float比较(evaluateOnRunning:false,float1:Float=>距离,
+				float2:Float 4,operation:5,child:
+				序列(abortOnConditionChanged:false,children:[
+					停止寻路(停止:Bool false),
+					设置寻路目标(目标:Vector3=>目标位置)
+				])
+			),
+			停止寻路(停止:Bool true)
+		])
+	])
 ])
 ```
 
