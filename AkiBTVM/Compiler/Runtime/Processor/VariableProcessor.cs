@@ -53,7 +53,7 @@ namespace Kurisu.AkiBT.Compiler
             var type=Scanner.TryGetVariableType();
             if(!type.HasValue)
             {
-                throw new Exception("语法错误,没有申明变量类型");
+                throw new Exception("<color=#ff2f2f>AkiBTCompiler</color> : Syntax error, variable type not declared");
             }
             variableType=type.Value;
             processState=VariableProcessState.IsShared;

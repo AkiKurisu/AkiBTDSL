@@ -2,7 +2,7 @@ using System;
 namespace Kurisu.AkiBT.Compiler
 {
     /// <summary>
-    /// To support UnityEngine.Vector2 && Vector3, we need to make a similar template for reason that we can't serialize them suitably using JsonConvert
+    /// To support UnityEngine.Vector2, we need to make a similar template for reason that we can't serialize them suitably using JsonConvert
     /// </summary>
     [System.Serializable]
     internal struct Vector2
@@ -35,7 +35,7 @@ namespace Kurisu.AkiBT.Compiler
             float x,y;
             if(scanner.CurrentToken!=Scanner.LeftParenthesis)
             {
-                throw new Exception("语法错误,Vector2缺少'('");
+                throw new Exception("<color=#ff2f2f>AkiBTCompiler</color> : Syntax error, Vector2 missing '('");
             }
             try
             {
@@ -48,12 +48,12 @@ namespace Kurisu.AkiBT.Compiler
             }
             catch
             {
-                throw new Exception("语法错误,无法识别出Vector2");
+                throw new Exception("<color=#ff2f2f>AkiBTCompiler</color> : Syntax error, Vector2 can't be declared");
             }
             scanner.MoveNextNoSpace();
             if(scanner.CurrentToken!=Scanner.RightParenthesis)
             {
-                throw new Exception("语法错误,Vector2缺少')'");
+                throw new Exception("<color=#ff2f2f>AkiBTCompiler</color> : Syntax error, Vector2 missing ')'");
             }
             return new Vector2(x,y);
         }

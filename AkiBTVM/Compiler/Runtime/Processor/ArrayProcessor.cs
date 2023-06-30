@@ -63,7 +63,7 @@ namespace Kurisu.AkiBT.Compiler
             {
                 return;
             }
-            throw new Exception($"<color=#ff2f2f>AkiBTCompiler</color> : 语法错误,找不到下一个有效字符");
+            throw new Exception("<color=#ff2f2f>AkiBTCompiler</color> : Syntax error, next valid character not found");
         }
         internal object[] GetArray()
         {

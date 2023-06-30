@@ -58,7 +58,7 @@ namespace Kurisu.AkiBT.Compiler
             var type=Scanner.TryGetVariableType();
             if(!type.HasValue)
             {
-                throw new Exception($"<color=#ff2f2f>AkiBTCompiler</color> : 语法错误,没有申明变量类型");
+                throw new Exception("<color=#ff2f2f>AkiBTCompiler</color> : Syntax error, variable type not declared");
             }
             variableType=type.Value;
             this.type=CurrentToken;
@@ -104,7 +104,7 @@ namespace Kurisu.AkiBT.Compiler
                 }
                 default:
                 {
-                    throw new Exception($"<color=#ff2f2f>AkiBTCompiler</color> : 无法识别类型,当前字符{CurrentToken}");
+                    throw new Exception($"<color=#ff2f2f>AkiBTCompiler</color> : Unrecognized type, current character is '{CurrentToken}'");
                 }
             }
             processState=VariableProcessState.Over;

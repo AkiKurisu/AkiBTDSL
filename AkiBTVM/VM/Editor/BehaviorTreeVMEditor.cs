@@ -5,6 +5,7 @@ using System;
 using UnityEngine;
 using Kurisu.AkiBT.Editor;
 using System.Reflection;
+using Kurisu.AkiBT;
 namespace Kurisu.AkiBT.VM.Editor
 {
     [CustomEditor(typeof(BehaviorTreeVM))]
@@ -38,7 +39,7 @@ namespace Kurisu.AkiBT.VM.Editor
                 bindingPath="isPlaying"
             };
             inspectorRoot.Add(toggle);
-            inspectorRoot.Add(new ObjectField("vmOutPut"){bindingPath="behaviorTreeSO",objectType=typeof(VMBehaviorTreeSO)});
+            inspectorRoot.Add(new ObjectField("vmOutPut"){bindingPath="behaviorTreeSO",objectType=typeof(BehaviorTreeSO)});
             //group
             var group1=VMBehaviorTreeEditorUtility.GetGroup();
             var group2=VMBehaviorTreeEditorUtility.GetGroup();
@@ -97,33 +98,6 @@ namespace Kurisu.AkiBT.VM.Editor
             }
         }
     }
-    [CustomEditor(typeof(VMBehaviorTreeSO),true)]
-    public class VMBehaviorTreeSOEditor : UnityEditor.Editor
-    {
-        const string LabelText="AkiBTVM Version1.0";
-        const string ButtonText="打开行为树SO";
-        protected VisualElement myInspector;
-        private FieldResolverFactory factory=new FieldResolverFactory();
-        public override VisualElement CreateInspectorGUI()
-        {
-            myInspector = new VisualElement();
-            var bt = target as IBehaviorTree;
-            var label=new Label(LabelText);
-            label.style.fontSize=20;
-            myInspector.Add(label);
-            myInspector.styleSheets.Add(BehaviorTreeSetting.GetInspectorStyle("AkiBT"));
-            myInspector.Add(new Label("行为树描述"));
-            var description=new PropertyField(serializedObject.FindProperty("Description"),string.Empty);
-            myInspector.Add(description);
-            var foldout=VMBehaviorTreeEditorUtility.DrawSharedVariable(bt,factory,target,this);
-            if(foldout!=null)myInspector.Add(foldout);
-            if(!Application.isPlaying)
-            { 
-                var button=VMBehaviorTreeEditorUtility.GetButton(ButtonText,new Color(140/255f, 160/255f, 250/255f),()=>{GraphEditorWindow.Show(bt);},100);
-                myInspector.Add(button);   
-            }
-            return myInspector;
-    }
     }
     internal class VMBehaviorTreeEditorUtility
     {
@@ -180,4 +154,4 @@ namespace Kurisu.AkiBT.VM.Editor
             return label;
         }
     }
-}
+

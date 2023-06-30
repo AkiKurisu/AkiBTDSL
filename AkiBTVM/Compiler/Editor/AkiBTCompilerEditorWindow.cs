@@ -27,7 +27,7 @@ namespace Kurisu.AkiBT.Compiler.Editor
         private AkiBTCompiler compiler;
         private const string KeyName="AkiBTCompilerSetting";
         private  CompilerSetting setting;
-        [MenuItem("Tools/AkiBTVM/Compiler Editor")]
+        [MenuItem("Tools/AkiKurisu/AkiBT Compiler Editor")]
         public static void OpenEditor()
         {
             GetWindow<AkiBTCompilerEditorWindow>("AkiBT Compiler Editor");
@@ -138,7 +138,7 @@ namespace Kurisu.AkiBT.Compiler.Editor
         }
         private async void GetTypeDict()
         {
-            IEnumerable<Type> list=SearchUtility.FindSubClassTypes(typeof(NodeBehavior));
+            IEnumerable<Type> list=SubclassSearchUtility.FindSubClassTypes(typeof(NodeBehavior));
             string[] showGroups=null;
             string[] notShowGroups=null;
             if(usingBehaviorTreeSettingMask)(showGroups,notShowGroups)=BehaviorTreeSetting.GetMask(editorName);
@@ -153,7 +153,7 @@ namespace Kurisu.AkiBT.Compiler.Editor
             var groups=list.GroupsByAkiGroup();
             list=list.Except(groups.SelectMany(x=>x)).ToList();
             groups=groups.SelectGroup(showGroups).ExceptGroup(notShowGroups);
-            list=list.Concat(groups.SelectMany(x=>x).Distinct()).Concat(SearchUtility.FindSubClassTypes(typeof(SharedVariable)));;
+            list=list.Concat(groups.SelectMany(x=>x).Distinct()).Concat(SubclassSearchUtility.FindSubClassTypes(typeof(SharedVariable)));;
             var nodeDict=new Dictionary<string,NodeTypeInfo>();
             foreach(var type in list)
             {

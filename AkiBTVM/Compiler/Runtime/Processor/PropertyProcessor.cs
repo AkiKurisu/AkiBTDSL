@@ -61,7 +61,7 @@ namespace Kurisu.AkiBT.Compiler
             }
             catch
             {
-                throw new Exception($"语法错误,找不到配对符号'{Scanner.Colon}'");
+                throw new Exception($"Syntax error, pairing symbol not found '{Scanner.Colon}'");
             }
             processState=PropertyProcessState.PropertyValue;
         }

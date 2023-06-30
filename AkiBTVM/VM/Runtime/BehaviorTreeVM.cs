@@ -1,5 +1,5 @@
 using UnityEngine;
-using Kurisu.AkiBT.Convertor;
+using Kurisu.AkiBT.Compiler;
 using System;
 namespace Kurisu.AkiBT.VM
 {
@@ -16,11 +16,11 @@ namespace Kurisu.AkiBT.VM
         private string vmCode;
         #endif
         #if UNITY_EDITOR
-            private AkiBTConvertor convertor=new AkiBTConvertor();
+            private AkiBTCompiler compiler=new AkiBTCompiler();
         #else
-            private AkiBTConvertor convertor;
+            private AkiBTCompiler compiler;
             private void Awake() {
-                convertor=new AkiBTConvertor();
+                compiler=new AkiBTCompiler();
             }
         # endif
         [SerializeField]
@@ -29,8 +29,8 @@ namespace Kurisu.AkiBT.VM
         [SerializeField,Tooltip("覆盖运行时绑定的GameObject,默认为当前GameObject")]
         private GameObject runGameObjectOverride;
         [SerializeField]
-        private VMBehaviorTreeSO behaviorTreeSO;
-        public VMBehaviorTreeSO BehaviorTreeSO{get=>behaviorTreeSO;
+        private BehaviorTreeSO behaviorTreeSO;
+        public BehaviorTreeSO BehaviorTreeSO{get=>behaviorTreeSO;
             #if UNITY_EDITOR
                 set=>behaviorTreeSO=value;
             #endif
@@ -43,10 +43,10 @@ namespace Kurisu.AkiBT.VM
         public void Compile(string vmCode)
         {
             if(behaviorTreeSO!=null)Clear();
-            behaviorTreeSO=ScriptableObject.CreateInstance<VMBehaviorTreeSO>();
+            behaviorTreeSO=ScriptableObject.CreateInstance<BehaviorTreeSO>();
             try
             {
-                behaviorTreeSO.InitVM(convertor.Convert(vmCode));
+                behaviorTreeSO.Deserialize(compiler.Compile(vmCode));
             }
             catch(Exception e)
             {
