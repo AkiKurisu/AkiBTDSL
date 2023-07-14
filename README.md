@@ -15,6 +15,11 @@ AkBTVM is a solution for runtime compile, designed for Behavior Tree [AkiBT](htt
 * Can be converted to IL intermediate code (Json-like) in advance
 * 编译器可以完全与项目分离,使用者无需了解项目中特殊结点的详细内容例如方法实现
 * The compiler can be completely separated from the project, and the user does not need to know the details of the special nodes in the project, such as method implementation
+
+# 安装 Setup
+1. Download [Release Package](https://github.com/AkiKurisu/AkiBTVM/releases)
+2. Using git URL to download package by Unity PackageManager ```https://github.com/AkiKurisu/AkiBTVM.git```
+
 #
 
 ## 使用方式How To Use
