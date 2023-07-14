@@ -1,0 +1,16 @@
+{
+  "name": "com.kurisu.akibtvm",
+  "displayName": "AkiBTVM",
+  "version": "1.2.7",
+  "unity": "2021.3",
+  "description": "Runtime Virtual Machine for AkiBT",
+  "keywords": [
+    "Virtual Machine",
+    "Runtime-Update"
+  ],
+  "category": "Visual Scripting",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AkiKurisu/AkiBTVM.git"
+  }
+}
