@@ -1,7 +1,7 @@
 {
   "name": "com.kurisu.akibtvm",
   "displayName": "AkiBTVM",
-  "version": "1.2.7",
+  "version": "1.3.0",
   "unity": "2021.3",
   "description": "Runtime Virtual Machine for AkiBT",
   "keywords": [
@@ -12,5 +12,9 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/AkiKurisu/AkiBTVM.git"
+  },
+  "dependencies": {
+    "com.kurisu.akibt": "1.3.0",
+    "com.unity.nuget.newtonsoft-json": "3.2.1"
   }
 }
