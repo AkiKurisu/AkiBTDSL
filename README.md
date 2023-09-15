@@ -1,4 +1,4 @@
-# AkiBTVM行为树虚拟机简介 Intro Of AkiBTVM
+# AkiBTVM简介 AkiBTVM Info
 
 
 AkiBTVM是[爱姬kurisu](https://space.bilibili.com/20472331)面向行为树[AkiBT](https://github.com/AkiKurisu/AkiBT)设计的运行时编译方案。你可以在游戏运行时对行为树进行热更新,并且使用者无需了解结点的详细内容、无需完整项目便可以进行脚本编写。
@@ -6,13 +6,11 @@ AkiBTVM是[爱姬kurisu](https://space.bilibili.com/20472331)面向行为树[Aki
 AkBTVM is a solution for runtime compile, designed for Behavior Tree [AkiBT](https://github.com/AkiKurisu/AkiBT) and supported by [AkiKurisu](https://space.bilibili.com/20472331).You can hot-update the Behavior Tree while the game is running, and users can write scripts without knowing the details of the nodes or the complete project.
 #
 
-## AkiBTVM特点 Features Of AkiBTVM
+## AkiBTVM特点 Features of AkiBTVM
 * 使用特殊的AkiBTCode编写AkiBT行为树
 * Write AkiBT Behavior Trees using the special AkiBTCode
 * 运行时随时进行编译，并可以在Editor中导出BehaviorTreeSO
 * Compile at any time during runtime and export BehaviorTreeSO in the Editor
-* 可以提前转为IL中间代码(Json-like)
-* Can be converted to IL intermediate code (Json-like) in advance
 * 编译器可以完全与项目分离,使用者无需了解项目中特殊结点的详细内容例如方法实现
 * The compiler can be completely separated from the project, and the user does not need to know the details of the special nodes in the project, such as method implementation
 
@@ -29,24 +27,23 @@ AkBTVM is a solution for runtime compile, designed for Behavior Tree [AkiBT](htt
 
 ### Chinese Version
 
-1. 使用AkiBTCompiler(Tools/AkiBTVM)生成一个TypeDictionary
+1. 使用AkiBTCompiler(Tools/AkiBT/AkiBT Compiler Editor)生成一个TypeDictionary
 2. 创建GameObject,挂载BehaviorTreeVM组件
-3. 在编辑器中输入AkiBTCode
+3. 在Inspector中拖入写了AkiBTCode的文本文件
 4. 点击Compile编译为行为树或者在运行时使用BehaviorTreeVM的```Compile(string vmCode)```方法
 5. 点击Run直接运行。
 6. 点击Save将编译出的行为树保存为BehaviorTreeSO
 
 ### English Version
 
-1. Use AkiBTCompiler (Tools/AkiBTVM) to generate a TypeDictionary
+1. Use AkiBTCompiler (Tools/AkiBT/AkiBT Compiler Editor) to generate a TypeDictionary
 2. Create a GameObject and mount the BehaviorTreeVM component
-3. Enter AkiBTCode in the editor
+3. Drag textAsset wrote with AkiBTCode to the inspector
 4. Click Compile to compile a behavior tree or using  ```Compile(string vmCode)``` method in BehaviorTreeVM at runtime
 5. Click Run to run directly.
 6. Click Save to save the compiled behavior tree as BehaviorTreeSO
   
-#
-## AkiBTCode解释 Explaination for AkiBTCode
+## AkiBTCode原理 Theory of AkiBTCode
 
 由于AkiBT的序列化依赖于```UnityEngine.SerializeReferenceAttribute```的序列化,热更新方案为模仿该序列化的格式从而反序列化为AkiBT行为树。
 
@@ -108,29 +105,30 @@ Vector3 subtract (0,0,0)
 Parallel(children:[
 	Sequence(children:[
 		Vector3Random(xRange:(-10,10),yRange:(0,0),zRange:(-10,10),operation:1,
-		storeResult: Vector3=>destination ),
-		DebugLog(logText:String Patrol获取了新位置),
-		TimeWait(waitTime:Float 10)
+		storeResult=>destination ),
+		DebugLog(logText:Patrol获取了新位置),
+		TimeWait(waitTime:10)
 	]),
 	Sequence(children:[
 		Sequence(children:[
-			TransformGetPosition(storeResult:Vector3=>myPos),
-			Vector3Operator(operation:1,firstVector3:Vector3=>myPos,
-				secondVector3:Vector3=>destination,storeResult:Vector3=>subtract),
-			Vector3GetSqrMagnitude(vector3:Vector3=>subtract,result:Float=>distance)
+			TransformGetPosition(storeResult=>myPos),
+			 Vector3Operator(operation:1,firstVector3=>myPos,
+				secondVector3=>destination,storeResult=>subtract),
+			Vector3GetSqrMagnitude(vector3=>subtract,result=>distance)
 		]),
 		Selector(abortOnConditionChanged: false, children:[
-			FloatComparison(evaluateOnRunning:false,float1:Float=>distance,
-				float2:Float 4,operation:5,child:
+			FloatComparison(evaluateOnRunning:false,float1=>distance,
+				float2:4,operation:5,child:
 				Sequence(abortOnConditionChanged:false,children:[
-					NavmeshStopAgent(isStopped:Bool false),
-					NavmeshSetDestination(destination:Vector3=>destination)
+					NavmeshStopAgent(isStopped:false),
+					NavmeshSetDestination(destination=>destination)
 				])
 			),
-			NavmeshStopAgent(isStopped:Bool true)
+			NavmeshStopAgent(isStopped:true)
 		])
 	])
 ])
+
 
 ```
 上述行为树为AkiBT Example中的巡逻AI行为树,它每10秒会获取一个新的位置并向其移动，如果距离目标点小于2则停止
@@ -154,20 +152,19 @@ For a node, you need to declare its type (name index, can be modified by customi
 
 For ordinary variables that do not use the default value of the node, you need to declare its name (or use AkiLabelAttribute to alter field's name) and add ':' to assign
 
-对于结点中的共享变量，你需要额外申明其类型，如果不需要引用公共变量的共享变量则直接进行赋值，例如
+对于结点中的共享变量，如果不需要引用公共变量的共享变量则直接进行赋值，例如
 
-For the shared variable in the node, you need to declare its type additionally. If you don’t need to refer to the shared variable of the public variable, you can assign it directly, for example
+For the shared variable in the node, if you don’t need to refer to the shared variable of the public variable, you can assign it directly, for example
 
 ```
-Action TimeWait(waitTime:Float 10)
+TimeWait(waitTime:10)
 ```
 对于需要引用的共享变量，则使用'=>'符号加上需要引用的公共变量名称，例如
 
 For shared variables that need to be referenced, use the '=>' symbol plus the name of the public variable that needs to be referenced, for example
 ```
-Action NavmeshSetDestination(destination:Vector3=>destination)
+NavmeshSetDestination(destination=>myDestination)
 ```
-#
 
 ## 自定义结点名称 Custom node name
 
@@ -176,27 +173,24 @@ AkiBTVM的编译依赖于AkiBTCompiler提前生成的TypeDictionary,一个Json�
 
 ```
 Vector3 玩家位置 (0,0,0)
-序列 (children:[
-    获取玩家位置 (位置:Vector3=>玩家位置),
-    移动至玩家(目标:Vector3=>玩家位置)
+序列 (子节点:[
+    获取玩家位置 (位置=>玩家位置),
+    移动至玩家(目标=>玩家位置)
 ])
 ```
 
 
 The compilation of AkiBTVM relies on the TypeDictionary generated in advance by AkiBTCompiler, a Json file used to search for node names and reflection information of actual C# classes such as Type, Assembly, NameSpace
 Therefore, you can achieve more concise scripting by modifying the node names in TypeDictionary.
-#
+
 
 ## 限制 Limitation
 
-### Chinese Version
 
 1. 结点必须已经存在项目中(因此该方案并非代码热更新)
+
+    The node must already exist in the project (so this solution is not code hot update)
+
 2. 使用者仍需了解各结点的具体变量类型和名称
-3. 枚举变量被序列化为int类型,影响人工编写
 
-### English Version
-
-4. The node must already exist in the project (so this solution is not code hot update)
-5. Users still need to know the specific variable type and name of each node
-6. The enumeration variable is serialized as int type, affecting manual writing
+    Users still need to know the specific variable type and name of each node

@@ -187,20 +187,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 61094eeedf4cba64caf7d037be5075ee, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  vmCode: "Vector3 destination (0,0,0)\r\nVector3 myPos (0,0,0)\r\nFloat distance
-    1\r\nVector3 subtract (0,0,0)\r\nComposite Parallel(children:[\r\n\tComposite
-    Sequence(children:[\r\n\t\tAction Vector3Random(xRange:(-10,10),yRange:(0,0),zRange:(-10,10),operation:1,\r\n\t\tstoreResult:
-    Vector3=>destination ),\r\n\t\tAction DebugLog(logText:String Patrol\u83B7\u53D6\u4E86\u65B0\u4F4D\u7F6E),\r\n\t\tAction
-    TimeWait(waitTime:Float 10)\r\n\t]),\r\n\tComposite Sequence(children:[\r\n\t\tComposite
-    Sequence(children:[\r\n\t\t\tAction TransformGetPosition(storeResult:Vector3=>myPos),\r\n\t\t\tAction
-    Vector3Operator(operation:1,firstVector3:Vector3=>myPos,\r\n\t\t\t\tsecondVector3:Vector3=>destination,storeResult:Vector3=>subtract),\r\n\t\t\tAction
-    Vector3GetSqrMagnitude(vector3:Vector3=>subtract,result:Float=>distance)\r\n\t\t]),\r\n\t\tComposite
-    Selector(abortOnConditionChanged: false, children:[\r\n\t\t\tConditional FloatComparison(evaluateOnRunning:false,float1:Float=>distance,\r\n\t\t\t\tfloat2:Float
-    4,operation:5,child:\r\n\t\t\t\tComposite Sequence(abortOnConditionChanged:false,children:[\r\n\t\t\t\t\tAction
-    NavmeshStopAgent(isStopped:Bool false),\r\n\t\t\t\t\tAction NavmeshSetDestination(destination:Vector3=>destination)\r\n\t\t\t\t])\r\n\t\t\t),\r\n\t\t\tAction
-    NavmeshStopAgent(isStopped:Bool true)\r\n\t\t])\r\n\t])\r\n])\r\n"
+  vmCode: {fileID: 4900000, guid: fa901c56198255e41acf55f68a5cbed9, type: 3}
   isPlaying: 0
-  runGameObjectOverride: {fileID: 0}
   behaviorTreeSO: {fileID: 0}
 --- !u!195 &320041472
 NavMeshAgent:

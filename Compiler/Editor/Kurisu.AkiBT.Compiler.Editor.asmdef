@@ -2,9 +2,9 @@
     "name": "Kurisu.AkiBT.Compiler.Editor",
     "rootNamespace": "Kurisu.AkiBT.Compiler.Editor",
     "references": [
-        "GUID:4a9214fa9d60c4c92bfc3c635010f27f",
+        "GUID:bf89a8bf6625fad4eb6879c01e73541d",
         "GUID:ea13d7331a0df234f85e126949843072",
-        "GUID:3dad40524f69b4faab0f11e825b1b08e"
+        "GUID:f107c6017d59d64439a1cf5a67861cd3"
     ],
     "includePlatforms": [
         "Editor"

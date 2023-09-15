@@ -1,53 +1,54 @@
 using System;
+using UnityEngine;
 namespace Kurisu.AkiBT.Compiler
 {
     internal class ReferencedVariableProcessor : Processor
     {
         private enum VariableProcessState
         {
-            GetType,GetName,GetValue,Over
+            GetType, GetName, GetValue, Over
         }
         private VariableProcessState processState;
-        private ReferencedVariable currentVariable=new ReferencedVariable();
+        private readonly ReferencedVariable currentVariable = new();
         private VariableCompileType variableType;
         private string type;
-        private object Value{set=>currentVariable.data["value"]=value;}
-        private object Name{set=>currentVariable.data["mName"]=value;}
+        private object Value { set => currentVariable.data["value"] = value; }
+        private object Name { set => currentVariable.data["mName"] = value; }
         protected sealed override void OnInit()
         {
-            processState=VariableProcessState.GetType;
-            type=null;
-            currentVariable.type=null;
+            processState = VariableProcessState.GetType;
+            type = null;
+            currentVariable.type.Clear();
             currentVariable.data.Clear();
-            currentVariable.data["isShared"]=true;
+            currentVariable.data["isShared"] = true;
             Process();
         }
         private void Process()
         {
-            while(CurrentIndex<TotalCount)
+            while (CurrentIndex < TotalCount)
             {
-                switch(processState)
+                switch (processState)
                 {
                     case VariableProcessState.GetType:
-                    {
-                        GetVariableType();
-                        break;
-                    }
+                        {
+                            GetVariableType();
+                            break;
+                        }
                     case VariableProcessState.GetName:
-                    {
-                        GetName();
-                        break;
-                    }
+                        {
+                            GetName();
+                            break;
+                        }
                     case VariableProcessState.GetValue:
-                    {
-                        GetValue();
-                        break;
-                    }
+                        {
+                            GetValue();
+                            break;
+                        }
                     case VariableProcessState.Over:
-                    {
-                        Compiler.RegisterReferencedVariable(type,currentVariable);
-                        return;
-                    }
+                        {
+                            Compiler.RegisterReferencedVariable(type, currentVariable);
+                            return;
+                        }
                 }
             }
         }
@@ -55,59 +56,59 @@ namespace Kurisu.AkiBT.Compiler
         private void GetVariableType()
         {
             Scanner.MoveNextNoSpace();
-            var type=Scanner.TryGetVariableType();
-            if(!type.HasValue)
+            var type = Scanner.TryGetVariableType();
+            if (!type.HasValue)
             {
                 throw new Exception("<color=#ff2f2f>AkiBTCompiler</color> : Syntax error, variable type not declared");
             }
-            variableType=type.Value;
-            this.type=CurrentToken;
-            processState=VariableProcessState.GetName;
-        }  
+            variableType = type.Value;
+            this.type = CurrentToken;
+            processState = VariableProcessState.GetName;
+        }
         private void GetName()
         {
             Scanner.MoveNextNoSpace();
-            Name=CurrentToken;
-            processState=VariableProcessState.GetValue;
+            Name = CurrentToken;
+            processState = VariableProcessState.GetValue;
         }
 
         private void GetValue()
         {
             Scanner.MoveNextNoSpace();
             //根据类型转换字符串
-            switch(variableType)
+            switch (variableType)
             {
                 case VariableCompileType.Int:
-                {
-                    Value=Int32.Parse(CurrentToken);
-                    break;
-                }
+                    {
+                        Value = int.Parse(CurrentToken);
+                        break;
+                    }
                 case VariableCompileType.Float:
-                {
-                    Value=float.Parse(CurrentToken);
-                    break;
-                }
+                    {
+                        Value = float.Parse(CurrentToken);
+                        break;
+                    }
                 case VariableCompileType.Bool:
-                {
-                    Value=Boolean.Parse(CurrentToken);
-                    break;
-                }
+                    {
+                        Value = bool.Parse(CurrentToken);
+                        break;
+                    }
                 case VariableCompileType.String:
-                {
-                    Value=CurrentToken;
-                    break;
-                }
+                    {
+                        Value = CurrentToken;
+                        break;
+                    }
                 case VariableCompileType.Vector3:
-                {
-                    Value=Scanner.GetVector3();
-                    break;
-                }
+                    {
+                        Value = Scanner.GetVector3();
+                        break;
+                    }
                 default:
-                {
-                    throw new Exception($"<color=#ff2f2f>AkiBTCompiler</color> : Unrecognized type, current character is '{CurrentToken}'");
-                }
+                    {
+                        throw new Exception($"<color=#ff2f2f>AkiBTCompiler</color> : Unrecognized type, current character is '{CurrentToken}'");
+                    }
             }
-            processState=VariableProcessState.Over;
+            processState = VariableProcessState.Over;
         }
     }
 }

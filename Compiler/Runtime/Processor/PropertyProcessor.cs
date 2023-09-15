@@ -1,44 +1,50 @@
 using System;
+using UnityEngine;
 namespace Kurisu.AkiBT.Compiler
 {
-    internal class PropertyProcessor:Processor
+    internal class PropertyProcessor : Processor
     {
         private string name;
+        public string PropertyName => name;
         private object value;
+        private const string SharedToken = "=>";
         private enum PropertyProcessState
         {
-            PropertyName,PropertyValue,Over
+            PropertyName, PropertyValue, Over
         }
         private PropertyProcessState processState;
+        private bool isShared;
+        public bool IsShared => isShared;
         protected sealed override void OnInit()
         {
-            processState=PropertyProcessState.PropertyName;
+            isShared = false;
+            processState = PropertyProcessState.PropertyName;
             Process();
         }
-        internal (string,object) GetProperty()
+        internal (string, object) GetProperty()
         {
-            return (name,value);
+            return (name, value);
         }
         private void Process()
         {
-            while(CurrentIndex<TotalCount)
+            while (CurrentIndex < TotalCount)
             {
-                switch(processState)
+                switch (processState)
                 {
                     case PropertyProcessState.PropertyName:
-                    {
-                        GetPropertyName();
-                        break;
-                    }
+                        {
+                            GetPropertyName();
+                            break;
+                        }
                     case PropertyProcessState.PropertyValue:
-                    {
-                        GetPropertyValue();
-                        break;
-                    }
+                        {
+                            GetPropertyValue();
+                            break;
+                        }
                     case PropertyProcessState.Over:
-                    {
-                        return;
-                    }
+                        {
+                            return;
+                        }
                 }
             }
         }
@@ -46,35 +52,34 @@ namespace Kurisu.AkiBT.Compiler
         private void GetPropertyName()
         {
             Scanner.MoveNextNoSpace();
-            name=CurrentToken;
-            CheckValidPair();
+            name = CurrentToken;
+            processState = PropertyProcessState.PropertyValue;
         }
-        /// <summary>
-        /// 检测是否有配对符号':'
-        /// </summary>
-        private void CheckValidPair()
+        private void ValidateSyntax()
         {
             Scanner.MoveNextNoSpace();
-            try
+            if (CurrentToken == SharedToken)
+                isShared = true;
+            else
             {
-                Scanner.FindToken(Scanner.Colon);
+                isShared = false;
+                if (CurrentToken != Scanner.Colon)
+                {
+                    throw new Exception($"<color=#ff2f2f>AkiBTCompiler</color> : Syntax error, pairing symbol not found '{Scanner.Colon}'");
+                }
             }
-            catch
-            {
-                throw new Exception($"Syntax error, pairing symbol not found '{Scanner.Colon}'");
-            }
-            processState=PropertyProcessState.PropertyValue;
         }
 
         private void GetPropertyValue()
         {
-            using (ValueProcessor processor=Compiler.GetProcessor<ValueProcessor>(Compiler,Scanner))
+            ValidateSyntax();
+            using (ValueProcessor processor = Compiler.GetProcessor<ValueProcessor>(this))
             {
-                value=processor.GetPropertyValue();
+                value = processor.GetPropertyValue();
             }
-            processState=PropertyProcessState.Over;
+            processState = PropertyProcessState.Over;
         }
     }
-    
-    
+
+
 }

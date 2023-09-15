@@ -1,61 +1,62 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 namespace Kurisu.AkiBT.Compiler
 {
-    internal class DataProcessor:Processor
+    internal class DataProcessor : Processor
     {
-        public Dictionary<string,object> properties=new Dictionary<string, object>();
+        public Dictionary<string, object> properties = new();
         private enum DataProcessState
         {
-            GetProperty,Over
+            GetProperty, Over
         }
         private DataProcessState processState;
         protected sealed override void OnInit()
         {
-            processState=DataProcessState.GetProperty;
+            processState = DataProcessState.GetProperty;
             properties.Clear();
             Process();
         }
-        internal Dictionary<string,object> GetData()
+        internal Dictionary<string, object> GetData()
         {
             return properties;
         }
         private void Process()
         {
-            while(CurrentIndex<TotalCount)
+            while (CurrentIndex < TotalCount)
             {
-                switch(processState)
+                switch (processState)
                 {
                     case DataProcessState.GetProperty:
-                    {
-                        GetProperty();
-                        break;
-                    }
+                        {
+                            GetProperty();
+                            break;
+                        }
                     case DataProcessState.Over:
-                    {
-                        return;
-                    }
+                        {
+                            return;
+                        }
                 }
             }
         }
         private void GetProperty()
         {
-            using (PropertyProcessor propertyProcessor=Compiler.GetProcessor<PropertyProcessor>(Compiler,Scanner))
+            using (PropertyProcessor propertyProcessor = Compiler.GetProcessor<PropertyProcessor>(this))
             {
-                var tuple=propertyProcessor.GetProperty();
-                properties.Add(tuple.Item1,tuple.Item2);
+                var tuple = propertyProcessor.GetProperty();
+                properties.Add(tuple.Item1, tuple.Item2);
             }
             CheckValidEnd();
         }
         private void CheckValidEnd()
         {
             Scanner.MoveNextNoSpace();
-            if(CurrentToken==Scanner.RightParenthesis)
+            if (CurrentToken == Scanner.RightParenthesis)
             {
-                processState=DataProcessState.Over;
+                processState = DataProcessState.Over;
                 return;
             }
-            if(CurrentToken==Scanner.Comma)
+            if (CurrentToken == Scanner.Comma)
             {
                 return;
             }

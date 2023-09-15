@@ -1,68 +1,69 @@
 namespace Kurisu.AkiBT.Compiler
 {
-    internal class NodeProcessor:Processor
+    internal class NodeProcessor : Processor
     {
-        private Node currentNode=new Node();
+        private readonly Node currentNode = new();
         private enum NodeProcessState
         {
-            GetType,GetData,Over
+            GetType, GetData, Over
         }
         private NodeProcessState processState;
-        public string nodeType=string.Empty;
+        private string nodeType = string.Empty;
+        public string NodeType => nodeType;
         protected override void OnInit()
         {
-            currentNode.data=null;
-            currentNode.type=null;
-            processState=NodeProcessState.GetType;   
+            currentNode.data = null;
+            currentNode.type.Clear();
+            processState = NodeProcessState.GetType;
             Process();
         }
         private void Process()
         {
-            while(CurrentIndex<TotalCount)
+            while (CurrentIndex < TotalCount)
             {
-                switch(processState)
+                switch (processState)
                 {
                     case NodeProcessState.GetType:
-                    {
-                        GetNodeType();
-                        break;
-                    }
+                        {
+                            GetNodeType();
+                            break;
+                        }
                     case NodeProcessState.GetData:
-                    {
-                        GetNodeData();
-                        break;
-                    }
+                        {
+                            GetNodeData();
+                            break;
+                        }
                     case NodeProcessState.Over:
-                    {
-                        return;
-                    }
+                        {
+                            return;
+                        }
                 }
             }
         }
         private void GetNodeType()
         {
             Scanner.MoveNextNoSpace();
-            nodeType=CurrentToken;
+            nodeType = CurrentToken;
             CheckValidStart();
         }
         private void CheckValidStart()
         {
             Scanner.MoveNextNoSpace();
             Scanner.FindToken(Scanner.LeftParenthesis);
-            processState=NodeProcessState.GetData;
+            processState = NodeProcessState.GetData;
         }
         private void GetNodeData()
         {
-            using (DataProcessor processor=Compiler.GetProcessor<DataProcessor>(Compiler,Scanner))
+            using (DataProcessor processor = Compiler.GetProcessor<DataProcessor>(this))
             {
-                currentNode.data=processor.GetData();
+                currentNode.data = processor.GetData();
             }
             //Data结束后Node一同结束,无需额外检测
-            processState=NodeProcessState.Over;
+            processState = NodeProcessState.Over;
         }
         internal Reference GetNode()
         {
-            return Compiler.RegisterNode(nodeType,currentNode);
+            return Compiler.RegisterNode(nodeType, currentNode);
         }
     }
 }

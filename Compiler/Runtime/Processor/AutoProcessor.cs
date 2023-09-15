@@ -6,32 +6,30 @@ namespace Kurisu.AkiBT.Compiler
         private bool rootProcessed;
         protected sealed override void OnInit()
         {
-            rootProcessed=false;
+            rootProcessed = false;
             Process();
         }
         private void Process()
         {
-            while(CurrentIndex<TotalCount-1)
+            while (CurrentIndex < TotalCount - 1)
             {
                 Scanner.MoveNextNoSpace();
-                if(CurrentIndex>=TotalCount-1)return;
-                if(Scanner.TryGetVariableType().HasValue)
+                if (CurrentIndex >= TotalCount - 1) return;
+                if (Scanner.TryGetVariableType().HasValue)
                 {
                     Scanner.MoveBack();
-                    using(ReferencedVariableProcessor processor=Compiler.GetProcessor<ReferencedVariableProcessor>(Compiler,Scanner)){};
+                    using (ReferencedVariableProcessor processor = Compiler.GetProcessor<ReferencedVariableProcessor>(this)) { };
                     continue;
                 }
-                if(Scanner.IsNodeType())
+                if (Compiler.IsNode(CurrentToken))
                 {
                     Scanner.MoveBack();
-                    using(NodeProcessor nodeProcessor=Compiler.GetProcessor<NodeProcessor>(Compiler,Scanner))
+                    using NodeProcessor nodeProcessor = Compiler.GetProcessor<NodeProcessor>(this);
+                    var reference = nodeProcessor.GetNode();
+                    if (!rootProcessed)
                     {
-                        var reference=nodeProcessor.GetNode();
-                        if(!rootProcessed)
-                        {
-                            rootProcessed=true;
-                            ProcessRoot(reference);
-                        }
+                        rootProcessed = true;
+                        ProcessRoot(reference);
                     }
                     continue;
                 }
@@ -39,9 +37,11 @@ namespace Kurisu.AkiBT.Compiler
         }
         private void ProcessRoot(Reference reference)
         {
-            var node=new Node();
-            node.data=new Dictionary<string, object>();
-            node.data["child"]=reference;
+            var node = new Node
+            {
+                data = new Dictionary<string, object>()
+            };
+            node.data["child"] = reference;
             Compiler.RegisterRoot(node);
         }
     }
