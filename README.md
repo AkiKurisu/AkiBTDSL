@@ -3,7 +3,7 @@
 
 AkiBTDSL是[爱姬kurisu](https://space.bilibili.com/20472331)面向行为树[AkiBT](https://github.com/AkiKurisu/AkiBT)设计的领域特定语言。你可以在游戏运行时对行为树进行热更新,并且使用者无需了解结点的详细内容、无需完整项目便可以进行行为树编写。
 
-AkBTVM is a solution for runtime compile, designed for Behavior Tree [AkiBT](https://github.com/AkiKurisu/AkiBT) and supported by [AkiKurisu](https://space.bilibili.com/20472331).You can hot-update the Behavior Tree while the game is running, and users can write scripts without knowing the details of the nodes or the complete project.
+AkBTDSL is a domain-specific language designed for Behavior Tree [AkiBT](https://github.com/AkiKurisu/AkiBT) and supported by [AkiKurisu](https://space.bilibili.com/20472331).You can hot-update the Behavior Tree while the game is running, and users can write scripts without knowing the details of the nodes or the complete project.
 
 ## 什么是DSL What is DSL
 
