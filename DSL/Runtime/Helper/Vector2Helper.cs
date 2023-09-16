@@ -1,5 +1,5 @@
 using System;
-namespace Kurisu.AkiBT.Compiler
+namespace Kurisu.AkiBT.DSL
 {
     /// <summary>
     /// To support UnityEngine.Vector2, we need to make a similar template for reason that we can't serialize them suitably using JsonConvert

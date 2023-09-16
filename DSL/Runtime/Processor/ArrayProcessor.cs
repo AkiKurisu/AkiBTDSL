@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-namespace Kurisu.AkiBT.Compiler
+namespace Kurisu.AkiBT.DSL
 {
     internal class ArrayProcessor : Processor
     {

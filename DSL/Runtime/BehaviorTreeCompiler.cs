@@ -2,7 +2,7 @@ using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using System.Collections.Generic;
 using System;
-namespace Kurisu.AkiBT.Compiler
+namespace Kurisu.AkiBT.DSL
 {
     internal interface IReference
     {
@@ -52,13 +52,13 @@ namespace Kurisu.AkiBT.Compiler
         public string mName = string.Empty;
         public object value;
     }
-    public class AkiBTCompiler
+    public class BehaviorTreeCompiler
     {
-        public AkiBTCompiler(string noteTypeFactoryName)
+        public BehaviorTreeCompiler(string noteTypeFactoryName)
         {
             factory = new NodeTypeFactory(noteTypeFactoryName);
         }
-        public AkiBTCompiler()
+        public BehaviorTreeCompiler()
         {
             factory = new NodeTypeFactory("AkiBTTypeDictionary");
         }
@@ -72,18 +72,18 @@ namespace Kurisu.AkiBT.Compiler
         private readonly Dictionary<string, Queue<Processor>> recyclePool = new();
         private readonly Scanner scanner = new();
         /// <summary>
-        /// Get AkiBTIL, fake json serialized data
+        /// Get BehaviorTreeSerializeReferenceData
         /// </summary>
         /// <param name="code">Input AkiBTCode</param>
-        /// <returns>AkiBTIL</returns>
+        /// <returns>Output BehaviorTreeSerializeReferenceData</returns>
         public string Compile(string code)
         {
             Init();
             scanner.Init(Regex.Split(code, Pattern));
             GetProcessor<AutoProcessor>(this, scanner).Dispose();
-            var IL = new AkiBTIL(root, referencesCache, variableReferences);
+            var referenceData = new BehaviorTreeSerializeReferenceData(root, referencesCache, variableReferences);
             RecycleProcessor();
-            return JsonConvert.SerializeObject(IL);
+            return JsonConvert.SerializeObject(referenceData);
         }
         private void Init()
         {
@@ -125,7 +125,7 @@ namespace Kurisu.AkiBT.Compiler
         {
             return factory.IsVariable(nodeType, fieldLabel);
         }
-        internal T GetProcessor<T>(AkiBTCompiler compiler, Scanner scanner) where T : Processor, new()
+        internal T GetProcessor<T>(BehaviorTreeCompiler compiler, Scanner scanner) where T : Processor, new()
         {
             var processor = GetProcessor<T>();
             processor.Init(compiler, scanner);

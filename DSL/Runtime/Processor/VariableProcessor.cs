@@ -1,4 +1,4 @@
-namespace Kurisu.AkiBT.Compiler
+namespace Kurisu.AkiBT.DSL
 {
     internal class VariableProcessor : Processor
     {

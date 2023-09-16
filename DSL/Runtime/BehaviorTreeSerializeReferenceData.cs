@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-namespace Kurisu.AkiBT.Compiler
+namespace Kurisu.AkiBT.DSL
 {
     /// <summary>
     /// An json-like template to imitate serialization of SerializeReferenceAttribute does
@@ -7,26 +7,26 @@ namespace Kurisu.AkiBT.Compiler
     /// If the API is changed,you may need to cover the key name such as 'version' and 'RefIds'
     /// </summary>
     [System.Serializable]
-    public class AkiBTIL
+    public class BehaviorTreeSerializeReferenceData
     {
         [System.Serializable]
         public class References
         {
-            public readonly int version=2;
+            public readonly int version = 2;
             public readonly object[] RefIds;
             public References(List<object> referencesCache)
             {
-                RefIds=referencesCache.ToArray();
+                RefIds = referencesCache.ToArray();
             }
         }
         public readonly Reference root;
         public readonly Reference[] variables;
         public readonly References references;
-        internal AkiBTIL(Reference root,List<object> referencesCache,List<Reference>variableReferences)
+        internal BehaviorTreeSerializeReferenceData(Reference root, List<object> referencesCache, List<Reference> variableReferences)
         {
-            this.root=root;
-            references=new References(referencesCache);
-            variables=variableReferences.ToArray();
+            this.root = root;
+            references = new References(referencesCache);
+            variables = variableReferences.ToArray();
         }
     }
 }

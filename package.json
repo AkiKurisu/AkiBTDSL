@@ -1,17 +1,17 @@
 {
-  "name": "com.kurisu.akibtvm",
-  "displayName": "AkiBTVM",
+  "name": "com.kurisu.akibdsl",
+  "displayName": "AkiBTDSL",
   "version": "1.4.1",
   "unity": "2021.3",
-  "description": "Runtime Virtual Machine for AkiBT",
+  "description": "Domain-Specific Language for AkiBT",
   "keywords": [
-    "Virtual Machine",
+    "Domain-Specific Language",
     "Runtime-Update"
   ],
   "category": "Visual Scripting",
   "repository": {
     "type": "git",
-    "url": "https://github.com/AkiKurisu/AkiBTVM.git"
+    "url": "https://github.com/AkiKurisu/AkiBTDSL.git"
   },
   "dependencies": {
     "com.kurisu.akibt": "1.4.1",

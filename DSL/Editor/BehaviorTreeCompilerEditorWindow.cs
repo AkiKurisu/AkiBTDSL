@@ -7,9 +7,9 @@ using Kurisu.AkiBT.Editor;
 using Newtonsoft.Json;
 using UnityEditor;
 using UnityEngine;
-namespace Kurisu.AkiBT.Compiler.Editor
+namespace Kurisu.AkiBT.DSL.Editor
 {
-    public class AkiBTCompilerEditorWindow : EditorWindow
+    public class BehaviorTreeCompilerEditorWindow : EditorWindow
     {
         private class CompilerSetting
         {
@@ -25,13 +25,12 @@ namespace Kurisu.AkiBT.Compiler.Editor
         private bool UsingBehaviorTreeSettingMask { get => setting.usingBehaviorTreeSettingMask; set => setting.usingBehaviorTreeSettingMask = value; }
         private string EditorName { get => setting.editorName; set => setting.editorName = value; }
         private string DictionaryName { get => setting.dictionaryName; set => setting.dictionaryName = value; }
-        private AkiBTCompiler compiler;
         private const string KeyName = "AkiBTCompilerSetting";
         private CompilerSetting setting;
-        [MenuItem("Tools/AkiBT/AkiBT Compiler Editor")]
+        [MenuItem("Tools/AkiBT/AkiBT Compiler")]
         public static void OpenEditor()
         {
-            GetWindow<AkiBTCompilerEditorWindow>("AkiBT Compiler Editor");
+            GetWindow<BehaviorTreeCompilerEditorWindow>("AkiBT Compiler");
         }
         public delegate Vector2 BeginVerticalScrollViewFunc(Vector2 scrollPosition, bool alwaysShowVertical, GUIStyle verticalScrollbar, GUIStyle background, params GUILayoutOption[] options);
         static BeginVerticalScrollViewFunc s_func;
@@ -51,6 +50,7 @@ namespace Kurisu.AkiBT.Compiler.Editor
         private GUIStyle textAreaStyle;
         private GUIStyle labelStyle;
         private int state = 2;
+        private int mTab;
         private void OnEnable()
         {
             var data = EditorPrefs.GetString(KeyName);
@@ -69,12 +69,34 @@ namespace Kurisu.AkiBT.Compiler.Editor
         private void OnGUI()
         {
             GatherStyle();
+            int newTab = GUILayout.Toolbar(mTab, new string[] { "Compile", "Decompile" });
+            if (newTab != mTab)
+            {
+                mTab = newTab;
+                state = 2;
+            }
             m_ScrollPosition = BeginVerticalScrollView(m_ScrollPosition, false, GUI.skin.verticalScrollbar, "OL Box");
             EditorGUILayout.BeginVertical();
             GUILayout.Label("Input Code");
             inputPosition = BeginVerticalScrollView(inputPosition, false, GUI.skin.verticalScrollbar, "OL Box", GUILayout.Height(400));
             InputCode = EditorGUILayout.TextArea(InputCode, textAreaStyle);
             EditorGUILayout.EndScrollView();
+            switch (mTab)
+            {
+                case 0:
+                    DrawCompile();
+                    break;
+                case 1:
+                    DrawDecompile();
+                    break;
+            }
+
+            EditorGUILayout.EndVertical();
+            EditorGUILayout.EndScrollView();
+            DrawToolbar();
+        }
+        private void DrawCompile()
+        {
             GUILayout.Label("Output Data");
             EditorGUILayout.TextArea(outPutCode, textAreaStyle, GUILayout.MinHeight(100));
             var orgColor = GUI.backgroundColor;
@@ -99,10 +121,49 @@ namespace Kurisu.AkiBT.Compiler.Editor
                 GUIUtility.ExitGUI();
             }
             GUI.backgroundColor = orgColor;
-            DrawResult(state);
-            EditorGUILayout.EndVertical();
-            EditorGUILayout.EndScrollView();
-            GUILayout.BeginVertical();
+            DrawCompileResult(state);
+        }
+        private void DrawDecompile()
+        {
+            DrawDragAndDrop();
+            DrawDecompileResult(state);
+        }
+        private void DrawDragAndDrop()
+        {
+
+            GUIStyle StyleBox = new(GUI.skin.box)
+            {
+                alignment = TextAnchor.MiddleCenter,
+                fontStyle = FontStyle.Italic,
+                fontSize = 12
+            };
+            GUI.skin.box = StyleBox;
+            Rect myRect = GUILayoutUtility.GetRect(0, 50, GUILayout.ExpandWidth(true));
+            GUI.Box(myRect, "Drag and Drop BehaviorTree to this Box!", StyleBox);
+            {
+                if (Event.current.type == EventType.DragUpdated)
+                {
+                    DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
+                    Event.current.Use();
+
+                }
+                if (Event.current.type == EventType.DragPerform)
+                {
+                    if (DragAndDrop.objectReferences.Length > 0)
+                    {
+                        state = 0;
+                        if (DragAndDrop.objectReferences[0] is GameObject gameObject)
+                            state = Decompile(gameObject.GetComponent<IBehaviorTree>());
+                        else if (DragAndDrop.objectReferences[0] is IBehaviorTree behaviorTree)
+                            state = Decompile(behaviorTree);
+                        else
+                            state = -1;
+                    }
+                }
+            }
+        }
+        private void DrawToolbar()
+        {
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
             GUILayout.Label("Dictionary Name", labelStyle);
@@ -112,6 +173,7 @@ namespace Kurisu.AkiBT.Compiler.Editor
             EditorName = GUILayout.TextField(EditorName, GUILayout.MinWidth(50));
             GUI.enabled = true;
             UsingBehaviorTreeSettingMask = EditorGUILayout.ToggleLeft(string.Empty, UsingBehaviorTreeSettingMask, GUILayout.Width(20));
+            var orgColor = GUI.backgroundColor;
             GUI.backgroundColor = new Color(253 / 255f, 163 / 255f, 255 / 255f);
             if (GUILayout.Button("Create Type Dictionary"))
             {
@@ -119,17 +181,16 @@ namespace Kurisu.AkiBT.Compiler.Editor
             }
             GUI.backgroundColor = orgColor;
             GUILayout.EndHorizontal();
-            GUILayout.EndVertical();
         }
-        private void DrawResult(int state)
+        private void DrawCompileResult(int state)
         {
             if (state == 1)
             {
-                GUILayout.Label("<color=#3aff48>AkiBTCompiler</color> : Compile Success!", labelStyle);
+                GUILayout.Label("<color=#3aff48>AkiBTCompiler</color> : Compile Succeed!", labelStyle);
             }
             if (state == 0)
             {
-                GUILayout.Label("<color=#ff2f2f>AkiBTCompiler</color> : Compile Fail!", labelStyle);
+                GUILayout.Label("<color=#ff2f2f>AkiBTCompiler</color> : Compile Failed!", labelStyle);
             }
             if (state == -1)
             {
@@ -140,6 +201,25 @@ namespace Kurisu.AkiBT.Compiler.Editor
                 GUILayout.Label("<color=#ff2f2f>AkiBTCompiler</color> : Type Dictionary has not generated!", labelStyle);
             }
         }
+        private void DrawDecompileResult(int state)
+        {
+            if (state == 1)
+            {
+                GUILayout.Label("<color=#3aff48>AkiBTDecompiler</color> : Decompile Succeed!", labelStyle);
+            }
+            if (state == 0)
+            {
+                GUILayout.Label("<color=#ff2f2f>AkiBTDecompiler</color> : Decompile Failed!", labelStyle);
+            }
+            if (state == -1)
+            {
+                GUILayout.Label("<color=#ff2f2f>AkiBTDecompiler</color> : Input Object's type is not supported!", labelStyle);
+            }
+            if (state == -2)
+            {
+                GUILayout.Label("<color=#ff2f2f>AkiBTDecompiler</color> : Type Dictionary has not generated!", labelStyle);
+            }
+        }
         private int Compile()
         {
             string fileInStreaming = $"{Application.streamingAssetsPath}/{DictionaryName}.json";
@@ -147,12 +227,22 @@ namespace Kurisu.AkiBT.Compiler.Editor
             {
                 return -2;
             }
-            compiler = new AkiBTCompiler(DictionaryName);
             if (string.IsNullOrEmpty(InputCode))
             {
                 return -1;
             }
-            outPutCode = compiler.Compile(InputCode);
+            outPutCode = new BehaviorTreeCompiler(DictionaryName).Compile(InputCode);
+            return 1;
+        }
+        private int Decompile(IBehaviorTree behaviorTree)
+        {
+            string fileInStreaming = $"{Application.streamingAssetsPath}/{DictionaryName}.json";
+            if (!File.Exists(fileInStreaming))
+            {
+                return -2;
+            }
+            if (behaviorTree == null) return -1;
+            InputCode = new BehaviorTreeDecompiler().Decompile(behaviorTree);
             return 1;
         }
         private async void GetTypeDict()
@@ -186,7 +276,7 @@ namespace Kurisu.AkiBT.Compiler.Editor
             Debug.Log("<color=#3aff48>AkiBTCompiler</color> : Creating AkiBT Type Dictionary...");
             //Write to file
             await File.WriteAllTextAsync(path, JsonConvert.SerializeObject(nodeDict, Formatting.Indented), System.Text.Encoding.UTF8);
-            Debug.Log($"<color=#3aff48>AkiBTCompiler</color> : Create Successed, file saving path:{path}");
+            Debug.Log($"<color=#3aff48>AkiBTCompiler</color> : Create succeed, file saving path:{path}");
         }
         private static void AddTypeInfo(Dictionary<string, NodeTypeInfo> dict, Type type)
         {
@@ -220,7 +310,7 @@ namespace Kurisu.AkiBT.Compiler.Editor
             info.isVariable = false;
             info.properties = new List<PropertyTypeInfo>();
             type.GetFields(BindingFlags.Public | BindingFlags.Instance)
-                .Concat(GetAllFields(type))//Concat合并列表
+                .Concat(GetAllFields(type))
                 .Where(field => field.IsInitOnly == false)
                 .ToList().ForEach((p) =>
                 {
@@ -241,7 +331,7 @@ namespace Kurisu.AkiBT.Compiler.Editor
 
             return t.GetFields(BindingFlags.NonPublic | BindingFlags.Instance)
                 .Where(field => field.GetCustomAttribute<SerializeField>() != null || field.GetCustomAttribute<SerializeReference>() != null)
-                .Concat(GetAllFields(t.BaseType));//Concat合并列表
+                .Concat(GetAllFields(t.BaseType));
         }
     }
 }

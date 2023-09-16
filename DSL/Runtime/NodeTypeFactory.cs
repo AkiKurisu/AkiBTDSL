@@ -8,7 +8,7 @@ using UnityEngine.Networking;
 using System.Threading.Tasks;
 #endif
 using System.Linq;
-namespace Kurisu.AkiBT.Compiler
+namespace Kurisu.AkiBT.DSL
 {
     public class NodeTypeInfo
     {
@@ -35,8 +35,8 @@ namespace Kurisu.AkiBT.Compiler
         {
             string fileInStreaming = $"{Application.streamingAssetsPath}/{dictionaryName}.json";
 #if !UNITY_EDITOR && UNITY_ANDROID
-                string fileInPersistent = $"{Application.persistentDataPath}/{dictionaryName}.json";
-                StreamingToPersistent(fileInStreaming,fileInPersistent);
+            string fileInPersistent = $"{Application.persistentDataPath}/{dictionaryName}.json";
+            StreamingToPersistent(fileInStreaming,fileInPersistent);
 #else
             if (!File.Exists(fileInStreaming))
             {
@@ -65,7 +65,7 @@ namespace Kurisu.AkiBT.Compiler
             await WaitRequestTask(request.SendWebRequest());
             Deserialize(fileInPersistent);
         }
-         private static async Task WaitRequestTask(UnityWebRequestAsyncOperation request)
+        private static async Task WaitRequestTask(UnityWebRequestAsyncOperation request)
         {
             while (!request.isDone)
             {
@@ -82,7 +82,7 @@ namespace Kurisu.AkiBT.Compiler
         {
             if (!nodeTypeDict.ContainsKey(nodeType))
             {
-                throw new Exception($"<color=#ff2f2f>AkiBTCompiler</color> : Can't find NodeType:{nodeType} in the Type Dictionary!");
+                throw new Exception($"<color=#ff2f2f>AkiBTCompiler</color> : Can't find node type: {nodeType} in the Type Dictionary!");
             }
             node.type[ClassKey] = nodeTypeDict[nodeType].className;
             node.type[NameSpaceKey] = nodeTypeDict[nodeType].ns;
@@ -91,7 +91,7 @@ namespace Kurisu.AkiBT.Compiler
             foreach (var key in list)
             {
                 if (key == ClassKey || key == NameSpaceKey || key == AssemblyKey) continue;
-                var property = nodeTypeDict[nodeType].properties?.FirstOrDefault(x => x.label == key);
+                var property = nodeTypeDict[nodeType].properties?.FirstOrDefault(x => x.label == key || x.name == key);
                 if (property != null)
                 {
                     var data = node.data[key];
@@ -100,7 +100,7 @@ namespace Kurisu.AkiBT.Compiler
                 }
                 else
                 {
-                    Debug.LogWarning($"<color=#ff2f2f>AkiBTCompiler</color> : Can't find Property:{key} in Type Dictionary:{nodeType}, value will be discarded.");
+                    Debug.LogWarning($"<color=#ff2f2f>AkiBTCompiler</color> : Can't find property: {key} of node type: {nodeType} in type dictionary, value will be discarded!");
                     node.data.Remove(key);
                 }
             }
@@ -131,7 +131,7 @@ namespace Kurisu.AkiBT.Compiler
                 variable.type[AssemblyKey] = nodeTypeDict[variableType].asm;
                 return;
             }
-            throw new Exception($"<color=#ff2f2f>AkiBTCompiler</color> : Can't find VariableType:{variableType} in the Type Dictionary!");
+            throw new Exception($"<color=#ff2f2f>AkiBTCompiler</color> : Can't find variable type: {variableType} in the type dictionary!");
         }
     }
 }

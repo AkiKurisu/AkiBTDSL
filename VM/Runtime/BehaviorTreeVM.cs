@@ -1,5 +1,5 @@
 using UnityEngine;
-using Kurisu.AkiBT.Compiler;
+using Kurisu.AkiBT.DSL;
 using System;
 namespace Kurisu.AkiBT.VM
 {
@@ -12,7 +12,7 @@ namespace Kurisu.AkiBT.VM
         public TextAsset vmCode;
 #endif
 #if UNITY_EDITOR
-        private AkiBTCompiler compiler;
+        private BehaviorTreeCompiler compiler;
 #else
         private AkiBTCompiler compiler;
         private void Awake() {

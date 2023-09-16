@@ -1,6 +1,6 @@
 using System;
 using System.Text;
-namespace Kurisu.AkiBT.Compiler
+namespace Kurisu.AkiBT.DSL
 {
     internal class Scanner
     {

@@ -1,6 +1,5 @@
 using System;
-using UnityEngine;
-namespace Kurisu.AkiBT.Compiler
+namespace Kurisu.AkiBT.DSL
 {
     internal class PropertyProcessor : Processor
     {
