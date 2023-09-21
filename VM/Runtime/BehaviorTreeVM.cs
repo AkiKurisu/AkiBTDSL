@@ -14,9 +14,9 @@ namespace Kurisu.AkiBT.VM
 #if UNITY_EDITOR
         private BehaviorTreeCompiler compiler;
 #else
-        private AkiBTCompiler compiler;
+        private BehaviorTreeCompiler compiler;
         private void Awake() {
-            compiler=new AkiBTCompiler();
+            compiler=new BehaviorTreeCompiler();
         }
 #endif
         [SerializeField]
