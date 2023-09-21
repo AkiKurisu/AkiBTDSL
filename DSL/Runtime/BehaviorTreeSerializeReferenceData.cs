@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 namespace Kurisu.AkiBT.DSL
 {
@@ -6,10 +7,10 @@ namespace Kurisu.AkiBT.DSL
     /// Can deserialize to Root and SharedVariables, which are the main part of a behaviorTree
     /// If the API is changed,you may need to cover the key name such as 'version' and 'RefIds'
     /// </summary>
-    [System.Serializable]
+    [Serializable]
     public class BehaviorTreeSerializeReferenceData
     {
-        [System.Serializable]
+        [Serializable]
         public class References
         {
             public readonly int version = 2;

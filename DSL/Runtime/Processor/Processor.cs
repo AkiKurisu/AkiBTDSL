@@ -3,7 +3,7 @@ namespace Kurisu.AkiBT.DSL
 {
     internal enum VariableCompileType
     {
-        Int, Float, Bool, String, Vector3
+        Int, Float, Bool, String, Vector3, Object
     }
     internal abstract class Processor : IDisposable
     {

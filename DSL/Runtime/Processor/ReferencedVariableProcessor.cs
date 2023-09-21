@@ -1,9 +1,15 @@
 using System;
-using UnityEngine;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 namespace Kurisu.AkiBT.DSL
 {
     internal class ReferencedVariableProcessor : Processor
     {
+        private struct UObject
+        {
+            public int instanceID;
+        }
         private enum VariableProcessState
         {
             GetType, GetName, GetValue, Over
@@ -12,7 +18,8 @@ namespace Kurisu.AkiBT.DSL
         private readonly ReferencedVariable currentVariable = new();
         private VariableCompileType variableType;
         private string type;
-        private object Value { set => currentVariable.data["value"] = value; }
+        private object Value
+        { set => currentVariable.data["value"] = value; }
         private object Name { set => currentVariable.data["mName"] = value; }
         protected sealed override void OnInit()
         {
@@ -101,6 +108,18 @@ namespace Kurisu.AkiBT.DSL
                 case VariableCompileType.Vector3:
                     {
                         Value = Scanner.GetVector3();
+                        break;
+                    }
+                case VariableCompileType.Object:
+                    {
+                        Value = new UObject()
+                        {
+#if UNITY_EDITOR
+                            instanceID = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(AssetDatabase.GUIDToAssetPath(CurrentToken)).GetInstanceID()
+#else
+                            instanceID=0
+#endif
+                        };
                         break;
                     }
                 default:

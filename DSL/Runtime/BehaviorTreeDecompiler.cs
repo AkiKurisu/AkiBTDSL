@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 using UnityEngine;
 namespace Kurisu.AkiBT.DSL
 {
@@ -24,7 +27,17 @@ namespace Kurisu.AkiBT.DSL
                 Space();
                 Write(variable.Name);
                 Space();
-                Write(variable.GetValue().ToString());
+                var value = variable.GetValue();
+#if UNITY_EDITOR
+                if (value is UnityEngine.Object UObject)
+                {
+                    string guid = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(UObject));
+                    if (string.IsNullOrEmpty(guid)) Write("Null");
+                    else Write(AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(UObject)));
+                }
+                else
+#endif
+                    Write(value.ToString());
                 NewLine();
             }
         }
@@ -107,7 +120,7 @@ namespace Kurisu.AkiBT.DSL
                 WritePropertyName(p);
                 if (p.FieldType.IsSubclassOf(typeof(SharedVariable)))
                 {
-                    WriteVariableValue(p, value as SharedVariable);
+                    WriteVariableValue(value as SharedVariable);
                 }
                 else
                 {
@@ -132,7 +145,7 @@ namespace Kurisu.AkiBT.DSL
                 Write(fieldInfo.Name);
             }
         }
-        private void WriteVariableValue(FieldInfo fieldInfo, SharedVariable variable)
+        private void WriteVariableValue(SharedVariable variable)
         {
             if (variable.IsShared)
             {
@@ -165,15 +178,6 @@ namespace Kurisu.AkiBT.DSL
                  //Skip Reference Property
                  field.GetCustomAttribute<SerializeReference>() == null)
                 .Concat(GetAllFields(t.BaseType));
-        }
-        private string GetName(Type type)
-        {
-            AkiLabelAttribute label;
-            if ((label = type.GetCustomAttribute<AkiLabelAttribute>()) != null)
-            {
-                return label.Title;
-            }
-            return type.Name;
         }
         private void Space()
         {

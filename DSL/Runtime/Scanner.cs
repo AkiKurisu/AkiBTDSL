@@ -4,11 +4,12 @@ namespace Kurisu.AkiBT.DSL
 {
     internal class Scanner
     {
-        internal const string Int = "Int";
-        internal const string Bool = "Bool";
-        internal const string Float = "Float";
-        internal const string String = "String";
-        internal const string Vector3 = "Vector3";
+        private const string Int = "Int";
+        private const string Bool = "Bool";
+        private const string Float = "Float";
+        private const string String = "String";
+        private const string Vector3 = "Vector3";
+        private const string Object = "Object";
         internal const string LeftParenthesis = "(";
         internal const string RightParenthesis = ")";
         internal const string LeftBracket = "[";
@@ -106,6 +107,10 @@ namespace Kurisu.AkiBT.DSL
                 case Vector3:
                     {
                         return VariableCompileType.Vector3;
+                    }
+                case Object:
+                    {
+                        return VariableCompileType.Object;
                     }
             }
             return null;

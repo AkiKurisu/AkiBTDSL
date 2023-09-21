@@ -35,12 +35,12 @@ namespace Kurisu.AkiBT.DSL
     internal class ReferencedVariable : IReference
     {
         /// <summary>
-        /// ReferenceID由Compiler生成
+        /// ReferenceID will be created by compiler
         /// </summary>
         public int rid;
         public int Rid { set => rid = value; }
         // <summary>
-        // Type根据NodeType查找获得
+        // Type will be created by compiler
         // </summary>
         public Dictionary<string, string> type = new();
         public Dictionary<string, object> data = new();
