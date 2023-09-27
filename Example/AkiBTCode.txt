@@ -1,3 +1,6 @@
+///
+这是使用AkiBTDSL编写的行为树
+///
 Vector3 destination (0,0,0)
 Vector3 myPos (0,0,0)
 Float distance 1

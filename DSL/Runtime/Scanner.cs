@@ -2,46 +2,31 @@ using System;
 using System.Text;
 namespace Kurisu.AkiBT.DSL
 {
-    internal class Scanner
+    public class Scanner
     {
-        private const string Int = "Int";
-        private const string Bool = "Bool";
-        private const string Float = "Float";
-        private const string String = "String";
-        private const string Vector3 = "Vector3";
-        private const string Object = "Object";
-        internal const string LeftParenthesis = "(";
-        internal const string RightParenthesis = ")";
-        internal const string LeftBracket = "[";
-        internal const string RightBracket = "]";
-        internal const string Comma = ",";
-        internal const string Colon = ":";
-        internal const string Line = "\n";
-        internal const string Return = "\r";
-        internal const string Tab = "\t";
         private string[] tokens;
         private int currentIndex;
-        internal int CurrentIndex => currentIndex;
-        internal int TotalCount { get; private set; }
-        internal string CurrentToken => currentIndex < TotalCount ? tokens[currentIndex] : null;
-        internal void Init(string[] tokens)
+        public int CurrentIndex => currentIndex;
+        public int TotalCount { get; private set; }
+        public string CurrentToken => currentIndex < TotalCount ? tokens[currentIndex] : null;
+        public void Init(string[] tokens)
         {
             currentIndex = -1;
             this.tokens = tokens;
             TotalCount = tokens.Length;
         }
-        internal void MoveBack()
+        public void MoveBack()
         {
             currentIndex--;
         }
-        internal void MoveTo(int index)
+        public void MoveTo(int index)
         {
             currentIndex = index;
         }
         /// <summary>
         /// 跳转到下一个非空字符(会跳过当前字符)
         /// </summary>
-        internal void MoveNextNoSpace()
+        public void MoveNextNoSpace()
         {
             //已到末尾无法继续查找
             if (currentIndex >= TotalCount - 1) return;
@@ -51,19 +36,19 @@ namespace Kurisu.AkiBT.DSL
         /// <summary>
         /// 跳过所有空格直到下一个非空字符(如果当前字符不为空则不会跳过)
         /// </summary>
-        internal void SkipSpace()
+        public void SkipSpace()
         {
-            while (string.IsNullOrWhiteSpace(CurrentToken) || CurrentToken == Return || CurrentToken == Line || CurrentToken == Tab)
+            while (string.IsNullOrWhiteSpace(CurrentToken) || CurrentToken is Symbol.Return or Symbol.Line or Symbol.Tab)
             {
                 currentIndex++;
                 if (currentIndex >= TotalCount - 1) return;
             }
         }
         /// <summary>
-        /// 找到当前或下一个指定Token
+        /// 判断当前或下一个Token是否为指定Token
         /// </summary>
         /// <param name="token"></param>
-        internal void FindToken(string token)
+        public void AssertToken(string assertToken)
         {
             try
             {
@@ -71,12 +56,20 @@ namespace Kurisu.AkiBT.DSL
             }
             catch (ArgumentNullException)
             {
-                throw new Exception($"<color=#ff2f2f>AkiBTCompiler</color> : Syntax error, next valid character not found");
+                throw new CompileException("Syntax error, next valid character not found");
             }
-            if (CurrentToken != token)
+            if (CurrentToken != assertToken)
             {
-                throw new Exception($"<color=#ff2f2f>AkiBTCompiler</color> : Syntax error, pairing symbol not found '{token}'");
+                throw new CompileException($"Syntax error, assert symbol not found '{assertToken}'");
             }
+        }
+        public int IndexOfNext(string token)
+        {
+            for (int i = CurrentIndex + 1; i < TotalCount; i++)
+            {
+                if (tokens[i] == token) return i;
+            }
+            throw new CompileException($"Syntax error, search symbol not found '{token}'");
         }
         public string GetHistory()
         {
@@ -88,27 +81,27 @@ namespace Kurisu.AkiBT.DSL
         {
             switch (CurrentToken)
             {
-                case Int:
+                case Symbol.Int:
                     {
                         return VariableCompileType.Int;
                     }
-                case Bool:
+                case Symbol.Bool:
                     {
                         return VariableCompileType.Bool;
                     }
-                case Float:
+                case Symbol.Float:
                     {
                         return VariableCompileType.Float;
                     }
-                case String:
+                case Symbol.String:
                     {
                         return VariableCompileType.String;
                     }
-                case Vector3:
+                case Symbol.Vector3:
                     {
                         return VariableCompileType.Vector3;
                     }
-                case Object:
+                case Symbol.Object:
                     {
                         return VariableCompileType.Object;
                     }
@@ -135,13 +128,11 @@ namespace Kurisu.AkiBT.DSL
             {
                 return vector3;
             }
-            //失败回退
             MoveTo(index);
             if (this.TryGetVector2(out Vector2 vector2))
             {
                 return vector2;
             }
-            //失败回退
             MoveTo(index);
             return CurrentToken;
         }

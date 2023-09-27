@@ -36,31 +36,31 @@ namespace Kurisu.AkiBT.DSL
         internal static Vector3 GetVector3(Scanner scanner)
         {
             float x, y, z;
-            if (scanner.CurrentToken != Scanner.LeftParenthesis)
+            if (scanner.CurrentToken != Symbol.LeftParenthesis)
             {
-                throw new Exception("<color=#ff2f2f>AkiBTCompiler</color> : Syntax error, Vector3 missing '('");
+                throw new CompileException("Syntax error, Vector3 missing '('");
             }
             try
             {
                 scanner.MoveNextNoSpace();
                 x = float.Parse(scanner.CurrentToken);
                 scanner.MoveNextNoSpace();
-                scanner.FindToken(Scanner.Comma);
+                scanner.AssertToken(Symbol.Comma);
                 scanner.MoveNextNoSpace();
                 y = float.Parse(scanner.CurrentToken);
                 scanner.MoveNextNoSpace();
-                scanner.FindToken(Scanner.Comma);
+                scanner.AssertToken(Symbol.Comma);
                 scanner.MoveNextNoSpace();
                 z = float.Parse(scanner.CurrentToken);
             }
             catch
             {
-                throw new Exception("<color=#ff2f2f>AkiBTCompiler</color> : Syntax error, Vector3 can't be declared");
+                throw new CompileException("Syntax error, Vector3 can't be declared");
             }
             scanner.MoveNextNoSpace();
-            if (scanner.CurrentToken != Scanner.RightParenthesis)
+            if (scanner.CurrentToken != Symbol.RightParenthesis)
             {
-                throw new Exception("<color=#ff2f2f>AkiBTCompiler</color> : Syntax error, Vector3 missing ')'");
+                throw new CompileException("Syntax error, Vector3 missing ')'");
             }
             return new Vector3(x, y, z);
         }

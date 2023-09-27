@@ -124,7 +124,7 @@ namespace Kurisu.AkiBT.DSL
                 }
                 else
                 {
-                    WritePropertyValue(p, value);
+                    WritePropertyValue(value);
                 }
                 if (i < properties.Count - 1)
                 {
@@ -158,14 +158,9 @@ namespace Kurisu.AkiBT.DSL
                 Write(variable.GetValue().ToString());
             }
         }
-        private void WritePropertyValue(FieldInfo fieldInfo, object value)
+        private void WritePropertyValue(object value)
         {
             Write(':');
-            if (fieldInfo.FieldType.IsEnum)
-            {
-                Write(((int)value).ToString());
-                return;
-            }
             Write(value.ToString());
         }
         private static IEnumerable<FieldInfo> GetAllFields(Type t)

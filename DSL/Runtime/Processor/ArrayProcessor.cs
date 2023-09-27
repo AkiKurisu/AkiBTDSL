@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 namespace Kurisu.AkiBT.DSL
 {
@@ -50,16 +49,16 @@ namespace Kurisu.AkiBT.DSL
                 childCache.Add(processor.GetPropertyValue());
             }
             Scanner.MoveNextNoSpace();
-            if (CurrentToken == Scanner.RightBracket)
+            if (CurrentToken == Symbol.RightBracket)
             {
                 processState = ArrayProcessState.Over;
                 return;
             }
-            if (CurrentToken == Scanner.Comma)
+            if (CurrentToken == Symbol.Comma)
             {
                 return;
             }
-            throw new Exception("<color=#ff2f2f>AkiBTCompiler</color> : Syntax error, next valid character not found");
+            throw new CompileException("Syntax error, next valid character not found");
         }
         internal object[] GetArray()
         {

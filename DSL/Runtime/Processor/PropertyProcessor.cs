@@ -1,4 +1,3 @@
-using System;
 namespace Kurisu.AkiBT.DSL
 {
     internal class PropertyProcessor : Processor
@@ -6,7 +5,6 @@ namespace Kurisu.AkiBT.DSL
         private string name;
         public string PropertyName => name;
         private object value;
-        private const string SharedToken = "=>";
         private enum PropertyProcessState
         {
             PropertyName, PropertyValue, Over
@@ -57,14 +55,14 @@ namespace Kurisu.AkiBT.DSL
         private void ValidateSyntax()
         {
             Scanner.MoveNextNoSpace();
-            if (CurrentToken == SharedToken)
+            if (CurrentToken == Symbol.Shared)
                 isShared = true;
             else
             {
                 isShared = false;
-                if (CurrentToken != Scanner.Colon)
+                if (CurrentToken != Symbol.Colon)
                 {
-                    throw new Exception($"<color=#ff2f2f>AkiBTCompiler</color> : Syntax error, pairing symbol not found '{Scanner.Colon}'");
+                    throw new CompileException($"Syntax error, pairing symbol not found '{Symbol.Colon}'");
                 }
             }
         }

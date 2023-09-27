@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.IO;
 using System;
 using Newtonsoft.Json;
@@ -10,23 +9,8 @@ using System.Threading.Tasks;
 using System.Linq;
 namespace Kurisu.AkiBT.DSL
 {
-    public class NodeTypeInfo
-    {
-        public string className;
-        public string ns;
-        public string asm;
-        public bool isVariable;
-        public List<PropertyTypeInfo> properties;
-    }
-    public class PropertyTypeInfo
-    {
-        public string label;
-        public string name;
-        public bool isVariable;
-    }
     internal class NodeTypeFactory
     {
-        private class NodeTypeDictionary : Dictionary<string, NodeTypeInfo> { }
         private NodeTypeDictionary nodeTypeDict;
         private const string ClassKey = "class";
         private const string NameSpaceKey = "ns";
@@ -80,21 +64,22 @@ namespace Kurisu.AkiBT.DSL
 
         internal void GenerateType(string nodeType, Node node)
         {
-            if (!nodeTypeDict.ContainsKey(nodeType))
+            if (!nodeTypeDict.TryGetValue(nodeType, out NodeTypeInfo nodeTypeInfo))
             {
-                throw new Exception($"<color=#ff2f2f>AkiBTCompiler</color> : Can't find node type: {nodeType} in the Type Dictionary!");
+                throw new CompileException($"Can't find node type: {nodeType} in the Type Dictionary!");
             }
-            node.type[ClassKey] = nodeTypeDict[nodeType].className;
-            node.type[NameSpaceKey] = nodeTypeDict[nodeType].ns;
-            node.type[AssemblyKey] = nodeTypeDict[nodeType].asm;
+            node.type[ClassKey] = nodeTypeInfo.className;
+            node.type[NameSpaceKey] = nodeTypeInfo.ns;
+            node.type[AssemblyKey] = nodeTypeInfo.asm;
             var list = node.data.Keys.ToArray();
             foreach (var key in list)
             {
                 if (key == ClassKey || key == NameSpaceKey || key == AssemblyKey) continue;
-                var property = nodeTypeDict[nodeType].properties?.FirstOrDefault(x => x.label == key || x.name == key);
+                var property = nodeTypeInfo.properties?.FirstOrDefault(x => x.label == key || x.name == key);
                 if (property != null)
                 {
                     var data = node.data[key];
+                    if (property.IsEnum && data is string value) data = nodeTypeDict.enumInfos[property.enumIndex].IndexOf(value);
                     node.data.Remove(key);
                     node.data[property.name] = data;
                 }
@@ -107,31 +92,31 @@ namespace Kurisu.AkiBT.DSL
         }
         internal bool IsVariable(string nodeType, string fieldLabel)
         {
-            if (nodeTypeDict.ContainsKey(nodeType))
+            if (nodeTypeDict.TryGetValue(nodeType, out NodeTypeInfo nodeTypeInfo))
             {
-                if (nodeTypeDict[nodeType].properties == null) return false;
-                return nodeTypeDict[nodeType].properties.Any(x => x.label == fieldLabel && x.isVariable);
+                if (nodeTypeInfo.properties == null) return false;
+                return nodeTypeInfo.properties.Any(x => x.label == fieldLabel && x.IsVariable);
             }
             return false;
         }
         internal bool IsNode(string nodeType)
         {
-            if (nodeTypeDict.ContainsKey(nodeType))
+            if (nodeTypeDict.TryGetValue(nodeType, out NodeTypeInfo nodeTypeInfo))
             {
-                return !nodeTypeDict[nodeType].isVariable;
+                return !nodeTypeInfo.IsVariable;
             }
             return false;
         }
         internal void GenerateType(string variableType, ReferencedVariable variable)
         {
-            if (nodeTypeDict.ContainsKey(variableType))
+            if (nodeTypeDict.TryGetValue(variableType, out NodeTypeInfo nodeTypeInfo))
             {
-                variable.type[ClassKey] = nodeTypeDict[variableType].className;
-                variable.type[NameSpaceKey] = nodeTypeDict[variableType].ns;
-                variable.type[AssemblyKey] = nodeTypeDict[variableType].asm;
+                variable.type[ClassKey] = nodeTypeInfo.className;
+                variable.type[NameSpaceKey] = nodeTypeInfo.ns;
+                variable.type[AssemblyKey] = nodeTypeInfo.asm;
                 return;
             }
-            throw new Exception($"<color=#ff2f2f>AkiBTCompiler</color> : Can't find variable type: {variableType} in the type dictionary!");
+            throw new CompileException($"Can't find variable type: {variableType} in the type dictionary!");
         }
     }
 }

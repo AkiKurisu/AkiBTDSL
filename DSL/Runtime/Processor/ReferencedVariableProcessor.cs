@@ -66,7 +66,7 @@ namespace Kurisu.AkiBT.DSL
             var type = Scanner.TryGetVariableType();
             if (!type.HasValue)
             {
-                throw new Exception("<color=#ff2f2f>AkiBTCompiler</color> : Syntax error, variable type not declared");
+                throw new CompileException("Syntax error, variable type not declared");
             }
             variableType = type.Value;
             this.type = CurrentToken;
@@ -124,7 +124,7 @@ namespace Kurisu.AkiBT.DSL
                     }
                 default:
                     {
-                        throw new Exception($"<color=#ff2f2f>AkiBTCompiler</color> : Unrecognized type, current character is '{CurrentToken}'");
+                        throw new CompileException($"Unrecognized type, current character is '{CurrentToken}'");
                     }
             }
             processState = VariableProcessState.Over;

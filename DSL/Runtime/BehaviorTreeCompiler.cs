@@ -80,7 +80,7 @@ namespace Kurisu.AkiBT.DSL
         {
             Init();
             scanner.Init(Regex.Split(code, Pattern));
-            GetProcessor<AutoProcessor>(this, scanner).Dispose();
+            GetProcessor<MainProcessor>(this, scanner).Dispose();
             var referenceData = new BehaviorTreeSerializeReferenceData(root, referencesCache, variableReferences);
             RecycleProcessor();
             return JsonConvert.SerializeObject(referenceData);

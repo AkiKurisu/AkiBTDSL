@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 namespace Kurisu.AkiBT.DSL
 {
-    internal class AutoProcessor : Processor
+    internal class MainProcessor : Processor
     {
         private bool rootProcessed;
         protected sealed override void OnInit()
@@ -15,6 +15,12 @@ namespace Kurisu.AkiBT.DSL
             {
                 Scanner.MoveNextNoSpace();
                 if (CurrentIndex >= TotalCount - 1) return;
+                //Skip comment
+                if (CurrentToken == Symbol.Comment)
+                {
+                    Scanner.MoveTo(Scanner.IndexOfNext(Symbol.Comment) + 1);
+                    continue;
+                }
                 if (Scanner.TryGetVariableType().HasValue)
                 {
                     Scanner.MoveBack();

@@ -127,6 +127,38 @@ namespace Kurisu.AkiBT.DSL.Editor
         {
             DrawDragAndDrop();
             DrawDecompileResult(state);
+            if (GUILayout.Button("Decompile All", GUILayout.MinHeight(25)))
+            {
+                string path = EditorUtility.OpenFolderPanel("Choose decompile files saving path", Application.dataPath, "");
+                if (string.IsNullOrEmpty(path)) return;
+                //Using AkiBT Service
+                var serviceData = BehaviorTreeSetting.GetOrCreateSettings().ServiceData;
+                serviceData.ForceSetUp();
+                var decompiler = new BehaviorTreeDecompiler();
+                foreach (var pair in serviceData.serializationCollection.serializationPairs)
+                {
+                    if (pair.behaviorTreeSO != null)
+                    {
+                        string data;
+                        try
+                        {
+                            data = decompiler.Decompile(pair.behaviorTreeSO);
+                        }
+                        catch
+                        {
+                            Debug.Log($"Decompile failed with {pair.behaviorTreeSO.name}");
+                            continue;
+                        }
+                        string folderPath = path + $"/{pair.behaviorTreeSO.GetType().Name}";
+                        if (!Directory.Exists(folderPath)) Directory.CreateDirectory(folderPath);
+                        string savePath = $"{folderPath}/{pair.behaviorTreeSO.name}_DSL.json";
+                        File.WriteAllText(savePath, data);
+                    }
+                }
+                AssetDatabase.SaveAssets();
+                AssetDatabase.Refresh();
+                GUIUtility.ExitGUI();
+            }
         }
         private void DrawDragAndDrop()
         {
@@ -263,7 +295,7 @@ namespace Kurisu.AkiBT.DSL.Editor
             list = list.Except(groups.SelectMany(x => x)).ToList();
             groups = groups.SelectGroup(showGroups).ExceptGroup(notShowGroups);
             list = list.Concat(groups.SelectMany(x => x).Distinct()).Concat(SubclassSearchUtility.FindSubClassTypes(typeof(SharedVariable))); ;
-            var nodeDict = new Dictionary<string, NodeTypeInfo>();
+            var nodeDict = new NodeTypeDictionary();
             foreach (var type in list)
             {
                 AddTypeInfo(nodeDict, type);
@@ -278,24 +310,25 @@ namespace Kurisu.AkiBT.DSL.Editor
             await File.WriteAllTextAsync(path, JsonConvert.SerializeObject(nodeDict, Formatting.Indented), System.Text.Encoding.UTF8);
             Debug.Log($"<color=#3aff48>AkiBTCompiler</color> : Create succeed, file saving path:{path}");
         }
-        private static void AddTypeInfo(Dictionary<string, NodeTypeInfo> dict, Type type)
+        private static void AddTypeInfo(NodeTypeDictionary dict, Type type)
         {
             if (dict.ContainsKey(type.Name))
             {
-                dict[$"{type.Namespace}.{type.Name}"] = GenerateTypeInfo(type);
+                dict.internalDictionary[$"{type.Namespace}.{type.Name}"] = GenerateTypeInfo(dict, type);
             }
             else
             {
-                dict[type.Name] = GenerateTypeInfo(type);
+                dict.internalDictionary[type.Name] = GenerateTypeInfo(dict, type);
             }
         }
         /// <summary>
-        /// You need to generate TypeDictionary before using AkiBTVM
+        /// You need to generate TypeDictionary before using compiler
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
-        private static NodeTypeInfo GenerateTypeInfo(Type type)
+        private static NodeTypeInfo GenerateTypeInfo(NodeTypeDictionary dict, Type type)
         {
+            var enumDict = new Dictionary<Type, int>();
             var info = new NodeTypeInfo
             {
                 className = type.Name,
@@ -304,25 +337,46 @@ namespace Kurisu.AkiBT.DSL.Editor
             };
             if (type.IsSubclassOf(typeof(SharedVariable)))
             {
-                info.isVariable = true;
+                info.compileType = CompileType.Variable;
                 return info;
             }
-            info.isVariable = false;
-            info.properties = new List<PropertyTypeInfo>();
-            type.GetFields(BindingFlags.Public | BindingFlags.Instance)
-                .Concat(GetAllFields(type))
-                .Where(field => field.IsInitOnly == false)
-                .ToList().ForEach((p) =>
+            info.compileType = CompileType.Property;
+            var properties = type.GetFields(BindingFlags.Public | BindingFlags.Instance)
+                  .Concat(GetAllFields(type))
+                  .Where(field => field.IsInitOnly == false && field.GetCustomAttribute<HideInEditorWindow>() == null)
+                  .ToList();
+            if (properties.Count == 0) return info;
+            info.properties = new();
+            properties.ForEach((p) =>
                 {
                     var label = p.GetCustomAttribute(typeof(AkiLabelAttribute), false) as AkiLabelAttribute;
-                    info.properties.Add(new PropertyTypeInfo()
+                    PropertyTypeInfo propertyInfo;
+                    info.properties.Add(propertyInfo = new PropertyTypeInfo()
                     {
                         name = p.Name,
                         label = label?.Title ?? p.Name,
-                        isVariable = p.FieldType.IsSubclassOf(typeof(SharedVariable))
+                        compileType = GetCompileType(p.FieldType)
                     });
+                    if (propertyInfo.IsEnum)
+                    {
+                        if (!enumDict.ContainsKey(p.FieldType))
+                        {
+                            enumDict.Add(p.FieldType, dict.enumInfos.Count);
+                            dict.enumInfos.Add(new EnumInfo()
+                            {
+                                options = Enum.GetNames(p.FieldType)
+                            });
+                        }
+                        propertyInfo.enumIndex = enumDict[p.FieldType];
+                    }
                 });
             return info;
+        }
+        private static uint GetCompileType(Type type)
+        {
+            if (type.IsSubclassOf(typeof(SharedVariable))) return CompileType.Variable;
+            if (type.IsEnum) return CompileType.Enum;
+            return CompileType.Property;
         }
         private static IEnumerable<FieldInfo> GetAllFields(Type t)
         {

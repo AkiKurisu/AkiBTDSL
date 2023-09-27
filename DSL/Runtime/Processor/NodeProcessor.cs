@@ -49,7 +49,7 @@ namespace Kurisu.AkiBT.DSL
         private void CheckValidStart()
         {
             Scanner.MoveNextNoSpace();
-            Scanner.FindToken(Scanner.LeftParenthesis);
+            Scanner.AssertToken(Symbol.LeftParenthesis);
             processState = NodeProcessState.GetData;
         }
         private void GetNodeData()

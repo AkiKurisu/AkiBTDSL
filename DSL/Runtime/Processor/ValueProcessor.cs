@@ -37,7 +37,7 @@ namespace Kurisu.AkiBT.DSL
         {
             Scanner.MoveNextNoSpace();
             //检测是否存在Children
-            if (CurrentToken == Scanner.LeftBracket)
+            if (CurrentToken == Symbol.LeftBracket)
             {
                 using (ArrayProcessor processor = Compiler.GetProcessor<ArrayProcessor>(this))
                 {
