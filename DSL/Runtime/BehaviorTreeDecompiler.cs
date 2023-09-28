@@ -54,7 +54,9 @@ namespace Kurisu.AkiBT.DSL
             }
             if (WriteProperties(type, node) && index > 0)
             {
-                stringBuilder.Insert(index, ',');
+                for (int i = 0; i < indentLevel * 4; i++)
+                    stringBuilder.Insert(index, ' ');
+                stringBuilder.Insert(index, ",\n");
             }
             Write(')');
         }

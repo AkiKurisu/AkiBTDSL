@@ -117,7 +117,7 @@ namespace Kurisu.AkiBT.DSL.Editor
                 string outPutPath = $"Assets/{savePath}/ConvertTreeSO.asset";
                 AssetDatabase.CreateAsset(behaviorTreeSO, outPutPath);
                 AssetDatabase.SaveAssets();
-                Debug.Log($"<color=#3aff48>AkiBTCompiler</color>:BehaviorTreeSO saved succeed! File Path:{outPutPath}");
+                Log($"BehaviorTreeSO saved succeed! File Path:{outPutPath}");
                 GUIUtility.ExitGUI();
             }
             GUI.backgroundColor = orgColor;
@@ -146,7 +146,7 @@ namespace Kurisu.AkiBT.DSL.Editor
                         }
                         catch
                         {
-                            Debug.Log($"Decompile failed with {pair.behaviorTreeSO.name}");
+                            Error($"Decompile failed with {pair.behaviorTreeSO.name}");
                             continue;
                         }
                         string folderPath = path + $"/{pair.behaviorTreeSO.GetType().Name}";
@@ -285,11 +285,11 @@ namespace Kurisu.AkiBT.DSL.Editor
             if (UsingBehaviorTreeSettingMask) (showGroups, notShowGroups) = BehaviorTreeSetting.GetMask(EditorName);
             if (showGroups != null)
             {
-                for (int i = 0; i < showGroups.Length; i++) Debug.Log($"Showing Group:{showGroups[i]}");
+                for (int i = 0; i < showGroups.Length; i++) Log($"Showing Group:{showGroups[i]}");
             }
             if (notShowGroups != null)
             {
-                for (int i = 0; i < notShowGroups.Length; i++) Debug.Log($"Not Showing Group:{notShowGroups[i]}");
+                for (int i = 0; i < notShowGroups.Length; i++) Log($"Not Showing Group:{notShowGroups[i]}");
             }
             var groups = list.GroupsByAkiGroup();
             list = list.Except(groups.SelectMany(x => x)).ToList();
@@ -305,15 +305,16 @@ namespace Kurisu.AkiBT.DSL.Editor
             {
                 Directory.CreateDirectory(Application.streamingAssetsPath);
             }
-            Debug.Log("<color=#3aff48>AkiBTCompiler</color> : Creating AkiBT Type Dictionary...");
+            Log("Creating AkiBT Type Dictionary...");
             //Write to file
             await File.WriteAllTextAsync(path, JsonConvert.SerializeObject(nodeDict, Formatting.Indented), System.Text.Encoding.UTF8);
-            Debug.Log($"<color=#3aff48>AkiBTCompiler</color> : Create succeed, file saving path:{path}");
+            Log($"Create succeed, file saving path:{path}");
         }
         private static void AddTypeInfo(NodeTypeDictionary dict, Type type)
         {
             if (dict.ContainsKey(type.Name))
             {
+                Log($"{type.Name} already exits, label will be replaced with {type.Namespace}.{type.Name}");
                 dict.internalDictionary[$"{type.Namespace}.{type.Name}"] = GenerateTypeInfo(dict, type);
             }
             else
@@ -386,6 +387,14 @@ namespace Kurisu.AkiBT.DSL.Editor
             return t.GetFields(BindingFlags.NonPublic | BindingFlags.Instance)
                 .Where(field => field.GetCustomAttribute<SerializeField>() != null || field.GetCustomAttribute<SerializeReference>() != null)
                 .Concat(GetAllFields(t.BaseType));
+        }
+        private static void Log(string message)
+        {
+            Debug.Log($"<color=#3aff48>AkiBTCompiler</color> : {message}");
+        }
+        private static void Error(string message)
+        {
+            Debug.Log($"<color=#ff2f2f>AkiBTCompiler</color> : {message}");
         }
     }
 }
