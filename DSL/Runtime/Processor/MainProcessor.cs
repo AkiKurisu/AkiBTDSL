@@ -21,15 +21,15 @@ namespace Kurisu.AkiBT.DSL
                     Scanner.MoveTo(Scanner.IndexOfNext(Symbol.Comment) + 1);
                     continue;
                 }
-                if (Scanner.TryGetVariableType().HasValue)
+                Scanner.MoveBack();
+                if (Scanner.TryGetVariableType(Scanner.Peek).HasValue)
                 {
-                    Scanner.MoveBack();
+
                     using (ReferencedVariableProcessor processor = Compiler.GetProcessor<ReferencedVariableProcessor>(this)) { };
                     continue;
                 }
-                if (Compiler.IsNode(CurrentToken))
+                if (Compiler.IsNode(Scanner.Peek))
                 {
-                    Scanner.MoveBack();
                     using NodeProcessor nodeProcessor = Compiler.GetProcessor<NodeProcessor>(this);
                     var reference = nodeProcessor.GetNode();
                     if (!rootProcessed)

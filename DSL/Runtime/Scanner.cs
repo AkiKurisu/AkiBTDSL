@@ -9,6 +9,14 @@ namespace Kurisu.AkiBT.DSL
         public int CurrentIndex => currentIndex;
         public int TotalCount { get; private set; }
         public string CurrentToken => currentIndex < TotalCount ? tokens[currentIndex] : null;
+        public string Peek
+        {
+            get
+            {
+                if (currentIndex + 1 >= tokens.Length) return null;
+                return tokens[currentIndex + 1];
+            }
+        }
         public void Init(string[] tokens)
         {
             currentIndex = -1;
@@ -18,6 +26,10 @@ namespace Kurisu.AkiBT.DSL
         public void MoveBack()
         {
             currentIndex--;
+        }
+        public void MoveNext()
+        {
+            currentIndex++;
         }
         public void MoveTo(int index)
         {
@@ -79,7 +91,11 @@ namespace Kurisu.AkiBT.DSL
         }
         internal VariableCompileType? TryGetVariableType()
         {
-            switch (CurrentToken)
+            return TryGetVariableType(CurrentToken);
+        }
+        internal static VariableCompileType? TryGetVariableType(string token)
+        {
+            switch (token)
             {
                 case Symbol.Int:
                     {
@@ -108,6 +124,7 @@ namespace Kurisu.AkiBT.DSL
             }
             return null;
         }
+
         internal object ParseValue()
         {
             //检测是否为数字

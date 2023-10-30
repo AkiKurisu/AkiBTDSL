@@ -52,6 +52,9 @@ namespace Kurisu.AkiBT.DSL
         public string mName = string.Empty;
         public object value;
     }
+    /// <summary>
+    /// Simple compiler using recursive descent subroutine method
+    /// </summary>
     public class BehaviorTreeCompiler
     {
         public BehaviorTreeCompiler(string noteTypeFactoryName)

@@ -4,54 +4,39 @@ namespace Kurisu.AkiBT.DSL
     internal class ArrayProcessor : Processor
     {
         private readonly List<object> childCache = new();
-        private enum ArrayProcessState
-        {
-            GetChild, Over
-        }
-        private ArrayProcessState processState;
+        private bool flag;
         protected sealed override void OnInit()
         {
             childCache.Clear();
-            processState = ArrayProcessState.GetChild;
+            flag = true;
             Process();
         }
         private void Process()
         {
-            while (CurrentIndex < TotalCount)
+            while (CurrentIndex < TotalCount && flag)
             {
-                switch (processState)
-                {
-                    case ArrayProcessState.GetChild:
-                        {
-                            GetChild();
-                            break;
-                        }
-                    case ArrayProcessState.Over:
-                        {
-                            return;
-                        }
-                }
+                GetChild();
             }
         }
         private void GetChild()
         {
             Scanner.MoveNextNoSpace();
-            if (Compiler.IsNode(CurrentToken))
+            Scanner.MoveBack();
+            if (Compiler.IsNode(Scanner.Peek))
             {
-                Scanner.MoveBack();
                 using NodeProcessor processor = Compiler.GetProcessor<NodeProcessor>(this);
                 childCache.Add(processor.GetNode());
             }
             else
             {
-                Scanner.MoveBack();
                 using ValueProcessor processor = Compiler.GetProcessor<ValueProcessor>(this);
                 childCache.Add(processor.GetPropertyValue());
             }
             Scanner.MoveNextNoSpace();
+            //Validate end symbol
             if (CurrentToken == Symbol.RightBracket)
             {
-                processState = ArrayProcessState.Over;
+                flag = false;
                 return;
             }
             if (CurrentToken == Symbol.Comma)

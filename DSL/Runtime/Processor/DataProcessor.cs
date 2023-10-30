@@ -4,14 +4,10 @@ namespace Kurisu.AkiBT.DSL
     internal class DataProcessor : Processor
     {
         public Dictionary<string, object> properties = new();
-        private enum DataProcessState
-        {
-            GetProperty, Over
-        }
-        private DataProcessState processState;
+        private bool flag;
         protected sealed override void OnInit()
         {
-            processState = DataProcessState.GetProperty;
+            flag = true;
             properties.Clear();
             Process();
         }
@@ -21,20 +17,9 @@ namespace Kurisu.AkiBT.DSL
         }
         private void Process()
         {
-            while (CurrentIndex < TotalCount)
+            while (CurrentIndex < TotalCount && flag)
             {
-                switch (processState)
-                {
-                    case DataProcessState.GetProperty:
-                        {
-                            GetProperty();
-                            break;
-                        }
-                    case DataProcessState.Over:
-                        {
-                            return;
-                        }
-                }
+                GetProperty();
             }
         }
         private void GetProperty()
@@ -44,14 +29,11 @@ namespace Kurisu.AkiBT.DSL
                 var tuple = propertyProcessor.GetProperty();
                 properties.Add(tuple.Item1, tuple.Item2);
             }
-            CheckValidEnd();
-        }
-        private void CheckValidEnd()
-        {
             Scanner.MoveNextNoSpace();
+            //Validate end symbol
             if (CurrentToken == Symbol.RightParenthesis)
             {
-                processState = DataProcessState.Over;
+                flag = true;
                 return;
             }
             if (CurrentToken == Symbol.Comma)

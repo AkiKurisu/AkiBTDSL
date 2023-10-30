@@ -1,4 +1,3 @@
-using System;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -10,11 +9,6 @@ namespace Kurisu.AkiBT.DSL
         {
             public int instanceID;
         }
-        private enum VariableProcessState
-        {
-            GetType, GetName, GetValue, Over
-        }
-        private VariableProcessState processState;
         private readonly ReferencedVariable currentVariable = new();
         private VariableCompileType variableType;
         private string type;
@@ -23,7 +17,6 @@ namespace Kurisu.AkiBT.DSL
         private object Name { set => currentVariable.data["mName"] = value; }
         protected sealed override void OnInit()
         {
-            processState = VariableProcessState.GetType;
             type = null;
             currentVariable.type.Clear();
             currentVariable.data.Clear();
@@ -32,32 +25,11 @@ namespace Kurisu.AkiBT.DSL
         }
         private void Process()
         {
-            while (CurrentIndex < TotalCount)
-            {
-                switch (processState)
-                {
-                    case VariableProcessState.GetType:
-                        {
-                            GetVariableType();
-                            break;
-                        }
-                    case VariableProcessState.GetName:
-                        {
-                            GetName();
-                            break;
-                        }
-                    case VariableProcessState.GetValue:
-                        {
-                            GetValue();
-                            break;
-                        }
-                    case VariableProcessState.Over:
-                        {
-                            Compiler.RegisterReferencedVariable(type, currentVariable);
-                            return;
-                        }
-                }
-            }
+            if (CurrentIndex == TotalCount) return;
+            GetVariableType();
+            GetName();
+            GetValue();
+            Compiler.RegisterReferencedVariable(type, currentVariable);
         }
 
         private void GetVariableType()
@@ -70,13 +42,11 @@ namespace Kurisu.AkiBT.DSL
             }
             variableType = type.Value;
             this.type = CurrentToken;
-            processState = VariableProcessState.GetName;
         }
         private void GetName()
         {
             Scanner.MoveNextNoSpace();
             Name = CurrentToken;
-            processState = VariableProcessState.GetValue;
         }
 
         private void GetValue()
@@ -127,7 +97,6 @@ namespace Kurisu.AkiBT.DSL
                         throw new CompileException($"Unrecognized type, current character is '{CurrentToken}'");
                     }
             }
-            processState = VariableProcessState.Over;
         }
     }
 }

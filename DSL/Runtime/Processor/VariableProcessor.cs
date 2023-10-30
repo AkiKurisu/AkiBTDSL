@@ -2,15 +2,9 @@ namespace Kurisu.AkiBT.DSL
 {
     internal class VariableProcessor : Processor
     {
-        private enum VariableProcessState
-        {
-            IsShared, GetValue, Over
-        }
-        private VariableProcessState processState;
         private readonly Variable currentVariable = new();
         protected sealed override void OnInit()
         {
-            processState = VariableProcessState.IsShared;
             currentVariable.isShared = false;
             currentVariable.mName = string.Empty;
             currentVariable.value = null;
@@ -18,28 +12,11 @@ namespace Kurisu.AkiBT.DSL
         }
         private void Process()
         {
-            while (CurrentIndex < TotalCount)
-            {
-                switch (processState)
-                {
-                    case VariableProcessState.IsShared:
-                        {
-                            CheckIsShared();
-                            break;
-                        }
-                    case VariableProcessState.GetValue:
-                        {
-                            GetValue();
-                            break;
-                        }
-                    case VariableProcessState.Over:
-                        {
-                            return;
-                        }
-                }
-            }
+            if (CurrentIndex == TotalCount) return;
+            if (IsShared()) return;
+            GetValue();
         }
-        private void CheckIsShared()
+        private bool IsShared()
         {
             bool isShared = GetLastProcessor<PropertyProcessor>().IsShared;
             if (isShared)
@@ -47,16 +24,14 @@ namespace Kurisu.AkiBT.DSL
                 Scanner.MoveNextNoSpace();
                 currentVariable.isShared = true;
                 currentVariable.mName = CurrentToken;
-                processState = VariableProcessState.Over;
-                return;
+                return true;
             }
-            processState = VariableProcessState.GetValue;
+            return false;
         }
         private void GetValue()
         {
             Scanner.MoveNextNoSpace();
             currentVariable.value = Scanner.ParseValue();
-            processState = VariableProcessState.Over;
         }
 
         internal Variable GetVariable()
