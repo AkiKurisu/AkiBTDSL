@@ -20,5 +20,12 @@
   "author": {
     "name": "AkiKurisu",
     "url": "https://github.com/AkiKurisu"
-  }
+  },
+  "samples": [
+    {
+      "displayName": "DSL Example",
+      "description": "Simple example of usage",
+      "path": "Samples~/Example"
+    }
+  ]
 }
