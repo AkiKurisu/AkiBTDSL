@@ -27,7 +27,7 @@ namespace Kurisu.AkiBT.DSL.Editor
         private string DictionaryName { get => setting.dictionaryName; set => setting.dictionaryName = value; }
         private const string KeyName = "AkiBTCompilerSetting";
         private CompilerSetting setting;
-        [MenuItem("Tools/AkiBT/AkiBT Compiler")]
+        [MenuItem("Tools/AkiBT/DSL/Compiler")]
         public static void OpenEditor()
         {
             GetWindow<BehaviorTreeCompilerEditorWindow>("AkiBT Compiler");
