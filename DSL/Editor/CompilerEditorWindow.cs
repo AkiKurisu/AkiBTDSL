@@ -25,7 +25,7 @@ namespace Kurisu.AkiBT.DSL.Editor
         private bool UsingBehaviorTreeSettingMask { get => setting.usingBehaviorTreeSettingMask; set => setting.usingBehaviorTreeSettingMask = value; }
         private string EditorName { get => setting.editorName; set => setting.editorName = value; }
         private string DictionaryName { get => setting.dictionaryName; set => setting.dictionaryName = value; }
-        private const string KeyName = "AkiBTCompilerSetting";
+        private static string KeyName => Application.productName + "_AkiBT_DSL_CompilerSetting";
         private CompilerSetting setting;
         public delegate Vector2 BeginVerticalScrollViewFunc(Vector2 scrollPosition, bool alwaysShowVertical, GUIStyle verticalScrollbar, GUIStyle background, params GUILayoutOption[] options);
         static BeginVerticalScrollViewFunc s_func;
