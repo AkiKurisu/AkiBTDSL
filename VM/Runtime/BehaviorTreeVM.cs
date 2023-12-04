@@ -11,14 +11,11 @@ namespace Kurisu.AkiBT.VM
 #if UNITY_EDITOR
         public TextAsset vmCode;
 #endif
-#if UNITY_EDITOR
         private Compiler compiler;
-#else
-        private BehaviorTreeCompiler compiler;
-        private void Awake() {
-            compiler=new BehaviorTreeCompiler();
+        private void Awake()
+        {
+            compiler = new Compiler();
         }
-#endif
         [SerializeField]
         private bool isPlaying;
         public bool IsPlaying => isPlaying;
@@ -32,9 +29,6 @@ namespace Kurisu.AkiBT.VM
         /// <param name="vmCode"></param>
         public void Compile(string vmCode)
         {
-#if UNITY_EDITOR
-            compiler = new();
-#endif
             if (behaviorTreeSO != null) Clear();
             behaviorTreeSO = ScriptableObject.CreateInstance<BehaviorTreeSO>();
             try
