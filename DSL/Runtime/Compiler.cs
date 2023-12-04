@@ -1,69 +1,20 @@
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using System.Collections.Generic;
-using System;
 namespace Kurisu.AkiBT.DSL
 {
-    internal interface IReference
-    {
-        public int Rid { set; }
-    }
-    [Serializable]
-    public readonly struct Reference
-    {
-        public readonly int rid;
-        public Reference(int rid)
-        {
-            this.rid = rid;
-        }
-    }
-    [Serializable]
-    internal class Node : IReference
-    {
-        /// <summary>
-        /// ReferenceID will be created by compiler
-        /// </summary>
-        public int rid;
-        public int Rid { set => rid = value; }
-        // <summary>
-        // Type will be created by compiler
-        // </summary>
-        public Dictionary<string, string> type = new();
-        public Dictionary<string, object> data;
-    }
-    [Serializable]
-    internal class ReferencedVariable : IReference
-    {
-        /// <summary>
-        /// ReferenceID will be created by compiler
-        /// </summary>
-        public int rid;
-        public int Rid { set => rid = value; }
-        // <summary>
-        // Type will be created by compiler
-        // </summary>
-        public Dictionary<string, string> type = new();
-        public Dictionary<string, object> data = new();
-    }
-    [Serializable]
-    internal class Variable
-    {
-        public bool isShared;
-        public string mName = string.Empty;
-        public object value;
-    }
     /// <summary>
     /// Simple compiler using recursive descent subroutine method
     /// </summary>
-    public class BehaviorTreeCompiler
+    public class Compiler
     {
-        public BehaviorTreeCompiler(string noteTypeFactoryName)
+        public Compiler(string noteTypeFactoryName)
         {
             factory = new NodeTypeFactory(noteTypeFactoryName);
         }
-        public BehaviorTreeCompiler()
+        public Compiler()
         {
-            factory = new NodeTypeFactory("AkiBTTypeDictionary");
+            factory = new NodeTypeFactory("TypeDictionary");
         }
         private int currentID = 1000;
         private Reference root;
@@ -84,7 +35,7 @@ namespace Kurisu.AkiBT.DSL
             Init();
             scanner.Init(Regex.Split(code, Pattern));
             GetProcessor<MainProcessor>(this, scanner).Dispose();
-            var referenceData = new BehaviorTreeSerializeReferenceData(root, referencesCache, variableReferences);
+            var referenceData = new SerializeReferenceData(root, referencesCache, variableReferences);
             RecycleProcessor();
             return JsonConvert.SerializeObject(referenceData);
         }
@@ -128,7 +79,7 @@ namespace Kurisu.AkiBT.DSL
         {
             return factory.IsVariable(nodeType, fieldLabel);
         }
-        internal T GetProcessor<T>(BehaviorTreeCompiler compiler, Scanner scanner) where T : Processor, new()
+        internal T GetProcessor<T>(Compiler compiler, Scanner scanner) where T : Processor, new()
         {
             var processor = GetProcessor<T>();
             processor.Init(compiler, scanner);

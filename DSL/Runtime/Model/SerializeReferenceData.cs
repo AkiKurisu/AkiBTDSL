@@ -8,7 +8,7 @@ namespace Kurisu.AkiBT.DSL
     /// If the API is changed,you may need to cover the key name such as 'version' and 'RefIds'
     /// </summary>
     [Serializable]
-    public class BehaviorTreeSerializeReferenceData
+    public class SerializeReferenceData
     {
         [Serializable]
         public class References
@@ -23,7 +23,7 @@ namespace Kurisu.AkiBT.DSL
         public readonly Reference root;
         public readonly Reference[] variables;
         public readonly References references;
-        internal BehaviorTreeSerializeReferenceData(Reference root, List<object> referencesCache, List<Reference> variableReferences)
+        internal SerializeReferenceData(Reference root, List<object> referencesCache, List<Reference> variableReferences)
         {
             this.root = root;
             references = new References(referencesCache);

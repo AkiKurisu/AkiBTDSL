@@ -7,13 +7,13 @@ namespace Kurisu.AkiBT.DSL
     }
     internal abstract class Processor : IDisposable
     {
-        protected BehaviorTreeCompiler Compiler { get; private set; }
+        protected Compiler Compiler { get; private set; }
         protected Scanner Scanner { get; private set; }
         protected int CurrentIndex => Scanner.CurrentIndex;
         protected int TotalCount => Scanner.TotalCount;
         protected string CurrentToken => Scanner.CurrentToken;
         protected Processor Parent { get; private set; }
-        internal void Init(BehaviorTreeCompiler compiler, Scanner scanner)
+        internal void Init(Compiler compiler, Scanner scanner)
         {
             Compiler = compiler;
             Scanner = scanner;

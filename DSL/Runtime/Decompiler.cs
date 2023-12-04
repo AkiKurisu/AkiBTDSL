@@ -9,7 +9,10 @@ using UnityEditor;
 using UnityEngine;
 namespace Kurisu.AkiBT.DSL
 {
-    public class BehaviorTreeDecompiler
+    /// <summary>
+    /// Simple decompiler to convert any behavior tree to DSL
+    /// </summary>
+    public class Decompiler
     {
         private readonly StringBuilder stringBuilder = new();
         public string Decompile(IBehaviorTree behaviorTree)
@@ -182,8 +185,7 @@ namespace Kurisu.AkiBT.DSL
         }
         private void WriteIndent(int indentLevel)
         {
-            for (int i = 0; i < indentLevel * 4; i++)
-                stringBuilder.Append(' ');
+            stringBuilder.Append(' ', indentLevel);
         }
         private void NewLine()
         {

@@ -1,5 +1,8 @@
 namespace Kurisu.AkiBT.DSL
 {
+    /// <summary>
+    /// Compiler symbol table
+    /// </summary>
     public static class Symbol
     {
         public const string Int = "Int";

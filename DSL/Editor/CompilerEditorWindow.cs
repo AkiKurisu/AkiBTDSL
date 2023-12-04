@@ -9,14 +9,14 @@ using UnityEditor;
 using UnityEngine;
 namespace Kurisu.AkiBT.DSL.Editor
 {
-    public class BehaviorTreeCompilerEditorWindow : EditorWindow
+    public class CompilerEditorWindow : EditorWindow
     {
         private class CompilerSetting
         {
             public bool usingBehaviorTreeSettingMask;
             public string editorName = "AkiBT";
             public string inputCode = string.Empty;
-            public string dictionaryName = "AkiBTTypeDictionary";
+            public string dictionaryName = "TypeDictionary";
         }
         private string InputCode { get => setting.inputCode; set => setting.inputCode = value; }
         private string outPutCode;
@@ -27,11 +27,6 @@ namespace Kurisu.AkiBT.DSL.Editor
         private string DictionaryName { get => setting.dictionaryName; set => setting.dictionaryName = value; }
         private const string KeyName = "AkiBTCompilerSetting";
         private CompilerSetting setting;
-        [MenuItem("Tools/AkiBT/DSL/Compiler")]
-        public static void OpenEditor()
-        {
-            GetWindow<BehaviorTreeCompilerEditorWindow>("AkiBT Compiler");
-        }
         public delegate Vector2 BeginVerticalScrollViewFunc(Vector2 scrollPosition, bool alwaysShowVertical, GUIStyle verticalScrollbar, GUIStyle background, params GUILayoutOption[] options);
         static BeginVerticalScrollViewFunc s_func;
         static BeginVerticalScrollViewFunc BeginVerticalScrollView
@@ -51,6 +46,11 @@ namespace Kurisu.AkiBT.DSL.Editor
         private GUIStyle labelStyle;
         private int state = 2;
         private int mTab;
+        [MenuItem("Tools/AkiBT/DSL/Compiler")]
+        public static void OpenEditor()
+        {
+            GetWindow<CompilerEditorWindow>("AkiBT Compiler");
+        }
         private void OnEnable()
         {
             var data = EditorPrefs.GetString(KeyName);
@@ -134,7 +134,7 @@ namespace Kurisu.AkiBT.DSL.Editor
                 //Using AkiBT Service
                 var serviceData = BehaviorTreeSetting.GetOrCreateSettings().ServiceData;
                 serviceData.ForceSetUp();
-                var decompiler = new BehaviorTreeDecompiler();
+                var decompiler = new Decompiler();
                 foreach (var pair in serviceData.serializationCollection.serializationPairs)
                 {
                     if (pair.behaviorTreeSO != null)
@@ -263,7 +263,7 @@ namespace Kurisu.AkiBT.DSL.Editor
             {
                 return -1;
             }
-            outPutCode = new BehaviorTreeCompiler(DictionaryName).Compile(InputCode);
+            outPutCode = new Compiler(DictionaryName).Compile(InputCode);
             return 1;
         }
         private int Decompile(IBehaviorTree behaviorTree)
@@ -274,10 +274,10 @@ namespace Kurisu.AkiBT.DSL.Editor
                 return -2;
             }
             if (behaviorTree == null) return -1;
-            InputCode = new BehaviorTreeDecompiler().Decompile(behaviorTree);
+            InputCode = new Decompiler().Decompile(behaviorTree);
             return 1;
         }
-        private async void GetTypeDict()
+        private void GetTypeDict()
         {
             IEnumerable<Type> list = SubclassSearchUtility.FindSubClassTypes(typeof(NodeBehavior));
             string[] showGroups = null;
@@ -305,9 +305,8 @@ namespace Kurisu.AkiBT.DSL.Editor
             {
                 Directory.CreateDirectory(Application.streamingAssetsPath);
             }
-            Log("Creating AkiBT Type Dictionary...");
             //Write to file
-            await File.WriteAllTextAsync(path, JsonConvert.SerializeObject(nodeDict, Formatting.Indented), System.Text.Encoding.UTF8);
+            File.WriteAllText(path, JsonConvert.SerializeObject(nodeDict, Formatting.Indented), System.Text.Encoding.UTF8);
             Log($"Create succeed, file saving path:{path}");
         }
         private static void AddTypeInfo(NodeTypeDictionary dict, Type type)

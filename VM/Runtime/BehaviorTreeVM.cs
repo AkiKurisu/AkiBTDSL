@@ -12,7 +12,7 @@ namespace Kurisu.AkiBT.VM
         public TextAsset vmCode;
 #endif
 #if UNITY_EDITOR
-        private BehaviorTreeCompiler compiler;
+        private Compiler compiler;
 #else
         private BehaviorTreeCompiler compiler;
         private void Awake() {
