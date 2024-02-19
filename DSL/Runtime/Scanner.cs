@@ -9,13 +9,10 @@ namespace Kurisu.AkiBT.DSL
         public int CurrentIndex => currentIndex;
         public int TotalCount { get; private set; }
         public string CurrentToken => currentIndex < TotalCount ? tokens[currentIndex] : null;
-        public string Peek
+        public string Peek()
         {
-            get
-            {
-                if (currentIndex + 1 >= tokens.Length) return null;
-                return tokens[currentIndex + 1];
-            }
+            if (currentIndex + 1 >= tokens.Length) return null;
+            return tokens[currentIndex + 1];
         }
         public void Init(string[] tokens)
         {
@@ -42,7 +39,7 @@ namespace Kurisu.AkiBT.DSL
         {
             //已到末尾无法继续查找
             if (currentIndex >= TotalCount - 1) return;
-            currentIndex++;
+            ++currentIndex;
             SkipSpace();
         }
         /// <summary>
@@ -52,8 +49,7 @@ namespace Kurisu.AkiBT.DSL
         {
             while (string.IsNullOrWhiteSpace(CurrentToken) || CurrentToken is Symbol.Return or Symbol.Line or Symbol.Tab)
             {
-                currentIndex++;
-                if (currentIndex >= TotalCount - 1) return;
+                if (++currentIndex >= TotalCount - 1) return;
             }
         }
         /// <summary>
@@ -75,7 +71,7 @@ namespace Kurisu.AkiBT.DSL
                 throw new CompileException($"Syntax error, assert symbol not found '{assertToken}'");
             }
         }
-        public int IndexOfNext(string token)
+        public int IndexOf(string token)
         {
             for (int i = CurrentIndex + 1; i < TotalCount; i++)
             {
@@ -89,40 +85,60 @@ namespace Kurisu.AkiBT.DSL
             for (int i = 0; i < currentIndex; i++) stringBuilder.Append(tokens[i]);
             return stringBuilder.ToString();
         }
-        internal VariableCompileType? TryGetVariableType()
+        internal bool TryGetVariableType(out VariableCompileType compileType, out bool isGlobal)
         {
-            return TryGetVariableType(CurrentToken);
+            return TryGetVariableType(CurrentToken, out compileType, out isGlobal);
         }
-        internal static VariableCompileType? TryGetVariableType(string token)
+        internal bool TryGetVariableType(string token, out VariableCompileType compileType, out bool isGlobal)
+        {
+            if (token[0] == '$' && token[^1] == '$')
+            {
+                isGlobal = true;
+                return TryGetVariableType(token[1..^1], out compileType);
+            }
+            else
+            {
+                isGlobal = false;
+                return TryGetVariableType(token, out compileType);
+            }
+        }
+        private static bool TryGetVariableType(string token, out VariableCompileType compileType)
         {
             switch (token)
             {
                 case Symbol.Int:
                     {
-                        return VariableCompileType.Int;
+                        compileType = VariableCompileType.Int;
+                        return true;
                     }
                 case Symbol.Bool:
                     {
-                        return VariableCompileType.Bool;
+                        compileType = VariableCompileType.Bool;
+                        return true;
                     }
                 case Symbol.Float:
                     {
-                        return VariableCompileType.Float;
+                        compileType = VariableCompileType.Float;
+                        return true;
                     }
                 case Symbol.String:
                     {
-                        return VariableCompileType.String;
+                        compileType = VariableCompileType.String;
+                        return true;
                     }
                 case Symbol.Vector3:
                     {
-                        return VariableCompileType.Vector3;
+                        compileType = VariableCompileType.Vector3;
+                        return true;
                     }
                 case Symbol.Object:
                     {
-                        return VariableCompileType.Object;
+                        compileType = VariableCompileType.Object;
+                        return true;
                     }
             }
-            return null;
+            compileType = default;
+            return false;
         }
 
         internal object ParseValue()
@@ -141,18 +157,33 @@ namespace Kurisu.AkiBT.DSL
                 return boolValue;
             }
             int index = CurrentIndex;
-            if (this.TryGetVector3(out Vector3 vector3))
+            if (TryGetVector3(out Vector3 vector3))
             {
                 return vector3;
             }
             MoveTo(index);
-            if (this.TryGetVector2(out Vector2 vector2))
+            if (TryGetVector2(out Vector2 vector2))
             {
                 return vector2;
             }
             MoveTo(index);
             return CurrentToken;
         }
-
+        internal bool TryGetVector3(out Vector3 vector3)
+        {
+            return Vector3Helper.TryGetVector3(this, out vector3);
+        }
+        internal Vector3 GetVector3()
+        {
+            return Vector3Helper.GetVector3(this);
+        }
+        internal bool TryGetVector2(out Vector2 vector2)
+        {
+            return Vector2Helper.TryGetVector2(this, out vector2);
+        }
+        internal Vector2 GetVector2()
+        {
+            return Vector2Helper.GetVector2(this);
+        }
     }
 }

@@ -33,11 +33,37 @@ namespace Kurisu.AkiBT.DSL
         public string Compile(string code)
         {
             Init();
-            scanner.Init(Regex.Split(code, Pattern));
-            GetProcessor<MainProcessor>(this, scanner).Dispose();
-            var referenceData = new SerializeReferenceData(root, referencesCache, variableReferences);
+            scanner.Init(Tokenize(code));
+            Process<MainProcessor>(scanner).Dispose();
             RecycleProcessor();
-            return JsonConvert.SerializeObject(referenceData);
+            return JsonConvert.SerializeObject(new SerializeReferenceData(root, referencesCache, variableReferences));
+        }
+        private static string[] Tokenize(string code)
+        {
+            int start = 0;
+            int flag = 0;
+            var tokens = new List<string>();
+            for (int i = 0; i < code.Length; ++i)
+            {
+                if (code[i] == '\"')
+                {
+                    if (flag == 0)
+                    {
+                        tokens.AddRange(Regex.Split(code[start..i], Pattern));
+                        start = i + 1;
+                        flag = 1;
+                    }
+                    else
+                    {
+                        tokens.Add(code[start..i]);
+                        start = i + 1;
+                        flag = 0;
+                    }
+                }
+            }
+            if (start < code.Length)
+                tokens.AddRange(Regex.Split(code[(start - flag)..], Pattern));
+            return tokens.ToArray();
         }
         private void Init()
         {
@@ -79,16 +105,16 @@ namespace Kurisu.AkiBT.DSL
         {
             return factory.IsVariable(nodeType, fieldLabel);
         }
-        internal T GetProcessor<T>(Compiler compiler, Scanner scanner) where T : Processor, new()
+        private T Process<T>(Scanner scanner) where T : Processor, new()
         {
             var processor = GetProcessor<T>();
-            processor.Init(compiler, scanner);
+            processor.Process(this, scanner);
             return processor;
         }
-        internal T GetProcessor<T>(Processor parentProcessor) where T : Processor, new()
+        internal T Process<T>(Processor parentProcessor) where T : Processor, new()
         {
             var processor = GetProcessor<T>();
-            processor.Init(parentProcessor);
+            processor.Process(parentProcessor);
             return processor;
         }
         private T GetProcessor<T>() where T : Processor, new()

@@ -146,7 +146,7 @@ namespace Kurisu.AkiBT.DSL.Editor
                         }
                         catch
                         {
-                            Error($"Decompile failed with {pair.behaviorTreeSO.name}");
+                            LogError($"Decompile failed with {pair.behaviorTreeSO.name}");
                             continue;
                         }
                         string folderPath = path + $"/{pair.behaviorTreeSO.GetType().Name}";
@@ -389,11 +389,11 @@ namespace Kurisu.AkiBT.DSL.Editor
         }
         private static void Log(string message)
         {
-            Debug.Log($"<color=#3aff48>AkiBTCompiler</color> : {message}");
+            Debug.Log($"<color=#3aff48>AkiBTCompiler</color> :{message}");
         }
-        private static void Error(string message)
+        private static void LogError(string message)
         {
-            Debug.Log($"<color=#ff2f2f>AkiBTCompiler</color> : {message}");
+            Debug.Log($"<color=#ff2f2f>AkiBTCompiler</color> :{message}");
         }
     }
 }

@@ -8,9 +8,6 @@ namespace Kurisu.AkiBT.VM
     /// </summary>
     public class BehaviorTreeVM : MonoBehaviour
     {
-#if UNITY_EDITOR
-        public TextAsset vmCode;
-#endif
         private Compiler compiler;
         private void Awake()
         {

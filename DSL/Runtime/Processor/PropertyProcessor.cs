@@ -7,20 +7,16 @@ namespace Kurisu.AkiBT.DSL
         private object value;
         private bool isShared;
         public bool IsShared => isShared;
-        protected sealed override void OnInit()
+        protected sealed override void OnProcess()
         {
             isShared = false;
-            Process();
+            if (CurrentIndex == TotalCount) return;
+            GetPropertyName();
+            GetPropertyValue();
         }
         internal (string, object) GetProperty()
         {
             return (name, value);
-        }
-        private void Process()
-        {
-            if (CurrentIndex == TotalCount) return;
-            GetPropertyName();
-            GetPropertyValue();
         }
 
         private void GetPropertyName()
@@ -41,7 +37,7 @@ namespace Kurisu.AkiBT.DSL
                     throw new CompileException($"Syntax error, pairing symbol not found '{Symbol.Colon}'");
                 }
             }
-            using ValueProcessor processor = Compiler.GetProcessor<ValueProcessor>(this);
+            using ValueProcessor processor = Process<ValueProcessor>();
             value = processor.GetPropertyValue();
         }
     }

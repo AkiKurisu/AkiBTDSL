@@ -85,7 +85,7 @@ namespace Kurisu.AkiBT.DSL
                 }
                 else
                 {
-                    Debug.LogWarning($"<color=#ff2f2f>AkiBTCompiler</color> : Can't find property: {key} of node type: {nodeType} in type dictionary, value will be discarded!");
+                    Debug.LogWarning($"<color=#ff2f2f>AkiBTCompiler</color>: Can't find property: {key} of node type: {nodeType} in type dictionary, value will be discarded!");
                     node.data.Remove(key);
                 }
             }

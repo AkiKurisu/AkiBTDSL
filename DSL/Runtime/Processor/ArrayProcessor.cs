@@ -4,16 +4,12 @@ namespace Kurisu.AkiBT.DSL
     internal class ArrayProcessor : Processor
     {
         private readonly List<object> childCache = new();
-        private bool flag;
-        protected sealed override void OnInit()
+        private bool endFlag;
+        protected sealed override void OnProcess()
         {
             childCache.Clear();
-            flag = true;
-            Process();
-        }
-        private void Process()
-        {
-            while (CurrentIndex < TotalCount && flag)
+            endFlag = false;
+            while (CurrentIndex < TotalCount && !endFlag)
             {
                 GetChild();
             }
@@ -22,21 +18,21 @@ namespace Kurisu.AkiBT.DSL
         {
             Scanner.MoveNextNoSpace();
             Scanner.MoveBack();
-            if (Compiler.IsNode(Scanner.Peek))
+            if (Compiler.IsNode(Scanner.Peek()))
             {
-                using NodeProcessor processor = Compiler.GetProcessor<NodeProcessor>(this);
+                using NodeProcessor processor = Process<NodeProcessor>();
                 childCache.Add(processor.GetNode());
             }
             else
             {
-                using ValueProcessor processor = Compiler.GetProcessor<ValueProcessor>(this);
+                using ValueProcessor processor = Process<ValueProcessor>();
                 childCache.Add(processor.GetPropertyValue());
             }
             Scanner.MoveNextNoSpace();
             //Validate end symbol
             if (CurrentToken == Symbol.RightBracket)
             {
-                flag = false;
+                endFlag = true;
                 return;
             }
             if (CurrentToken == Symbol.Comma)

@@ -3,34 +3,27 @@ namespace Kurisu.AkiBT.DSL
     internal class ValueProcessor : Processor
     {
         private object value;
-        protected sealed override void OnInit()
+        protected sealed override void OnProcess()
         {
             value = null;
-            Process();
-        }
-        private void Process()
-        {
             if (CurrentIndex == TotalCount) return;
-
             GetValue();
-
         }
-
         private void GetValue()
         {
             Scanner.MoveNextNoSpace();
             //检测是否存在Children
             if (CurrentToken == Symbol.LeftBracket)
             {
-                using ArrayProcessor processor = Compiler.GetProcessor<ArrayProcessor>(this);
+                using ArrayProcessor processor = Process<ArrayProcessor>();
                 value = processor.GetArray();
                 return;
             }
             Scanner.MoveBack();
             //检测是否存在Child
-            if (Compiler.IsNode(Scanner.Peek))
+            if (Compiler.IsNode(Scanner.Peek()))
             {
-                using NodeProcessor processor = Compiler.GetProcessor<NodeProcessor>(this);
+                using NodeProcessor processor = Process<NodeProcessor>();
                 value = processor.GetNode();
                 return;
             }
@@ -38,7 +31,7 @@ namespace Kurisu.AkiBT.DSL
             var fieldLabel = GetLastProcessor<PropertyProcessor>().PropertyName;
             if (Compiler.IsVariable(nodeType, fieldLabel))
             {
-                using VariableProcessor processor = Compiler.GetProcessor<VariableProcessor>(this);
+                using VariableProcessor processor = Process<VariableProcessor>();
                 value = processor.GetVariable();
             }
             else

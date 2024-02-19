@@ -3,15 +3,11 @@ namespace Kurisu.AkiBT.DSL
     internal class VariableProcessor : Processor
     {
         private readonly Variable currentVariable = new();
-        protected sealed override void OnInit()
+        protected sealed override void OnProcess()
         {
             currentVariable.isShared = false;
             currentVariable.mName = string.Empty;
             currentVariable.value = null;
-            Process();
-        }
-        private void Process()
-        {
             if (CurrentIndex == TotalCount) return;
             if (IsShared()) return;
             GetValue();

@@ -4,13 +4,9 @@ namespace Kurisu.AkiBT.DSL
     internal class MainProcessor : Processor
     {
         private bool rootProcessed;
-        protected sealed override void OnInit()
+        protected sealed override void OnProcess()
         {
             rootProcessed = false;
-            Process();
-        }
-        private void Process()
-        {
             while (CurrentIndex < TotalCount - 1)
             {
                 Scanner.MoveNextNoSpace();
@@ -18,26 +14,28 @@ namespace Kurisu.AkiBT.DSL
                 //Skip comment
                 if (CurrentToken == Symbol.Comment)
                 {
-                    Scanner.MoveTo(Scanner.IndexOfNext(Symbol.Comment) + 1);
+                    Scanner.MoveTo(Scanner.IndexOf(Symbol.Comment) + 1);
                     continue;
                 }
                 Scanner.MoveBack();
-                if (Scanner.TryGetVariableType(Scanner.Peek).HasValue)
+                if (Scanner.TryGetVariableType(Scanner.Peek(), out _, out _))
                 {
-
-                    using (ReferencedVariableProcessor processor = Compiler.GetProcessor<ReferencedVariableProcessor>(this)) { };
+                    Process<ReferencedVariableProcessor>().Dispose();
                     continue;
                 }
-                if (Compiler.IsNode(Scanner.Peek))
+                else if (Compiler.IsNode(Scanner.Peek()))
                 {
-                    using NodeProcessor nodeProcessor = Compiler.GetProcessor<NodeProcessor>(this);
+                    using NodeProcessor nodeProcessor = Process<NodeProcessor>();
                     var reference = nodeProcessor.GetNode();
                     if (!rootProcessed)
                     {
                         rootProcessed = true;
                         ProcessRoot(reference);
                     }
-                    continue;
+                }
+                else
+                {
+                    Scanner.MoveNext();
                 }
             }
         }

@@ -13,6 +13,7 @@ namespace Kurisu.AkiBT.VM.Editor
         private Button runButton;
         private Button stopButton;
         private BehaviorTreeVM vm;
+        private ObjectField codeAssetField;
         const string LabelText = "AkiBTVM <size=12>Version1.4.1</size>";
         public override VisualElement CreateInspectorGUI()
         {
@@ -20,7 +21,7 @@ namespace Kurisu.AkiBT.VM.Editor
             VisualElement inspectorRoot = new();
             inspectorRoot.Add(VMEditorUtility.GetTitleLabel(LabelText));
             //Input
-            inspectorRoot.Add(new PropertyField(serializedObject.FindProperty("vmCode"), "Input Code"));
+            inspectorRoot.Add(codeAssetField = new ObjectField("Input Code") { objectType = typeof(TextAsset) });
             //Toggle
             var toggle = new Toggle("Is Playing")
             {
@@ -69,14 +70,14 @@ namespace Kurisu.AkiBT.VM.Editor
         private void Compile()
         {
             var vm = target as BehaviorTreeVM;
-            if (vm.vmCode == null)
+            if (codeAssetField.value == null)
             {
                 Debug.Log("<color=#ff2f2f>AkiBTVM</color>:Input Code Is Empty!");
                 return;
             }
             try
             {
-                vm.Compile(vm.vmCode.text);
+                vm.Compile((codeAssetField.value as TextAsset).text);
                 Debug.Log("<color=#3aff48>AkiBTVM</color>:Compile Success!");
             }
             catch (Exception e)
@@ -96,7 +97,7 @@ internal class VMEditorUtility
         if (color.HasValue) button.style.backgroundColor = color.Value;
         button.style.width = Length.Percent(widthPercent);
         button.text = text;
-        button.style.fontSize = 20;
+        button.style.fontSize = 15;
         return button;
     }
     internal static VisualElement GetGroup()

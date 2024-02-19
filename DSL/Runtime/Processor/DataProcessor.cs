@@ -1,30 +1,27 @@
 using System.Collections.Generic;
+using UnityEngine;
 namespace Kurisu.AkiBT.DSL
 {
     internal class DataProcessor : Processor
     {
         public Dictionary<string, object> properties = new();
-        private bool flag;
-        protected sealed override void OnInit()
+        private bool endFlag;
+        protected sealed override void OnProcess()
         {
-            flag = true;
+            endFlag = false;
             properties.Clear();
-            Process();
+            while (CurrentIndex < TotalCount && !endFlag)
+            {
+                GetProperty();
+            }
         }
         internal Dictionary<string, object> GetData()
         {
             return properties;
         }
-        private void Process()
-        {
-            while (CurrentIndex < TotalCount && flag)
-            {
-                GetProperty();
-            }
-        }
         private void GetProperty()
         {
-            using (PropertyProcessor propertyProcessor = Compiler.GetProcessor<PropertyProcessor>(this))
+            using (PropertyProcessor propertyProcessor = Process<PropertyProcessor>())
             {
                 var tuple = propertyProcessor.GetProperty();
                 properties.Add(tuple.Item1, tuple.Item2);
@@ -33,7 +30,7 @@ namespace Kurisu.AkiBT.DSL
             //Validate end symbol
             if (CurrentToken == Symbol.RightParenthesis)
             {
-                flag = true;
+                endFlag = true;
                 return;
             }
             if (CurrentToken == Symbol.Comma)
