@@ -11,7 +11,7 @@ namespace Kurisu.AkiBT.DSL.Editor
     /// Tools to split fields and function, header file can be provided for UGC side.
     /// User do not need to know implementation detail.
     /// </summary>
-    public class CodeGenerator : EditorWindow
+    public class CodeSplitter : EditorWindow
     {
         private class GeneratorSetting
         {
@@ -19,11 +19,11 @@ namespace Kurisu.AkiBT.DSL.Editor
             public string scriptFolderPath = string.Empty;
         }
         private GeneratorSetting setting;
-        private static string KeyName => Application.productName + "_AkiBT_DSL_GeneratorSetting";
-        [MenuItem("Tools/AkiBT/DSL/Code Generator")]
+        private static string KeyName => Application.productName + "_AkiBT_DSL_SplitterSetting";
+        [MenuItem("Tools/AkiBT/DSL/Code Splitter")]
         private static void GetWindow()
         {
-            GetWindowWithRect<CodeGenerator>(new Rect(0, 0, 400, 200));
+            GetWindowWithRect<CodeSplitter>(new Rect(0, 0, 400, 200));
         }
         private void OnEnable()
         {
@@ -43,16 +43,16 @@ namespace Kurisu.AkiBT.DSL.Editor
                 setting.scriptFolderPath = EditorUtility.OpenFolderPanel("Select Script Folder", "", "");
             }
             GUILayout.Label($"Path: {setting.scriptFolderPath}", new GUIStyle(GUI.skin.label) { wordWrap = true });
-            if (GUILayout.Button("Generate Code"))
+            if (GUILayout.Button("Split Code"))
             {
-                GenerateCode();
+                SplitCode();
             }
             if (GUILayout.Button("Restore Code"))
             {
                 RestoreCode();
             }
         }
-        private void GenerateCode()
+        private void SplitCode()
         {
             if (string.IsNullOrEmpty(setting.scriptFolderPath))
             {
