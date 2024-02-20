@@ -12,7 +12,7 @@ namespace Kurisu.AkiBT.DSL
         }
         private readonly ReferencedVariable currentVariable = new();
         private VariableCompileType variableType;
-        private const string AQMPattern = @"^[A-Za-z0-9\.]+, [A-Za-z0-9\.]+, Version=\d+\.\d+\.\d+\.\d+, Culture=[a-zA-Z]+, PublicKeyToken=[a-zA-Z0-9]+";
+        private const string AQNPattern = @"^[A-Za-z0-9\.]+, [A-Za-z0-9\.]+, Version=\d+\.\d+\.\d+\.\d+, Culture=[a-zA-Z]+, PublicKeyToken=[a-zA-Z0-9]+";
         private string type;
         private object Value
         {
@@ -89,9 +89,9 @@ namespace Kurisu.AkiBT.DSL
                     }
                 case VariableCompileType.Object:
                     {
-                        if (Regex.IsMatch(CurrentToken, AQMPattern))
+                        if (Regex.IsMatch(CurrentToken, AQNPattern))
                         {
-                            currentVariable.data["constraintTypeAQM"] = CurrentToken;
+                            currentVariable.data["constraintTypeAQN"] = CurrentToken;
                             Scanner.MoveNextNoSpace();
                         }
 #if UNITY_EDITOR

@@ -26,7 +26,7 @@ namespace Kurisu.AkiBT.DSL
         // <summary>
         // Type will be created by compiler
         // </summary>
-        public Dictionary<string, string> type = new();
+        public Dictionary<string, string> type = new(3);
         public Dictionary<string, object> data;
     }
     [Serializable]
@@ -40,7 +40,7 @@ namespace Kurisu.AkiBT.DSL
         // <summary>
         // Type will be created by compiler
         // </summary>
-        public Dictionary<string, string> type = new();
+        public Dictionary<string, string> type = new(3);
         public Dictionary<string, object> data = new();
     }
     [Serializable]
