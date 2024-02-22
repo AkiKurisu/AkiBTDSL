@@ -18,19 +18,27 @@ namespace Kurisu.AkiBT.DSL
         public string Decompile(IBehaviorTree behaviorTree)
         {
             stringBuilder.Clear();
-            WriteVariable(behaviorTree);
+            WriteReferencedVariable(behaviorTree);
             WriteNode(behaviorTree.Root.Child, 0);
             return stringBuilder.ToString();
         }
-        private void WriteVariable(IBehaviorTree behaviorTree)
+        private void WriteReferencedVariable(IBehaviorTree behaviorTree)
         {
             foreach (var variable in behaviorTree.SharedVariables)
             {
-                Write(variable.GetType().Name[6..]);
+                if (variable.IsGlobal)
+                    Write($"${variable.GetType().Name[6..]}$");
+                else
+                    Write(variable.GetType().Name[6..]);
                 Space();
                 Write(variable.Name);
                 Space();
                 var value = variable.GetValue();
+                if (variable is SharedObject sharedObject && !string.IsNullOrEmpty(sharedObject.ConstraintTypeAQN))
+                {
+                    SafeWrite(sharedObject.ConstraintTypeAQN);
+                    Space();
+                }
 #if UNITY_EDITOR
                 if (value is UnityEngine.Object UObject)
                 {
@@ -40,7 +48,9 @@ namespace Kurisu.AkiBT.DSL
                 }
                 else
 #endif
-                    Write(value.ToString());
+                {
+                    SafeWrite(value);
+                }
                 NewLine();
             }
         }
@@ -160,13 +170,13 @@ namespace Kurisu.AkiBT.DSL
             else
             {
                 Write(':');
-                Write(variable.GetValue().ToString());
+                SafeWrite(variable.GetValue());
             }
         }
         private void WritePropertyValue(object value)
         {
             Write(':');
-            Write(value.ToString());
+            SafeWrite(value);
         }
         private static IEnumerable<FieldInfo> GetAllFields(Type t)
         {
@@ -190,6 +200,13 @@ namespace Kurisu.AkiBT.DSL
         private void NewLine()
         {
             stringBuilder.Append('\n');
+        }
+        private void SafeWrite(object context)
+        {
+            if (context is string)
+                stringBuilder.Append($"\"{context}\"");
+            else
+                stringBuilder.Append(context.ToString());
         }
         private void Write(string text)
         {

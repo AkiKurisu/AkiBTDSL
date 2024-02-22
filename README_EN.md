@@ -124,7 +124,7 @@ The above behavior tree is the patrol AI behavior tree in AkiBT Example, it will
 
 The main body of DSL can be divided into two parts, public variables and nodes. The declaration of public variables needs to specify the type, name and value.
 
-If the type is wrapped with `&`, global variables will be bound at runtime, for example:
+If the type is wrapped with `$`, global variables will be bound at runtime, for example:
 
 ```
 $Vector3$ TargetPosition (0,0,0)
