@@ -330,6 +330,10 @@ namespace Kurisu.AkiBT.DSL
                     var items = stringValue.Split(',');
                     aqn = Assembly.CreateQualifiedName(items[0].Trim(), items[1].Trim());
                 }
+                if (string.IsNullOrEmpty(aqn))
+                    //No aqn define
+                    return new ObjectDefineExprAST(valueType, isGlobal, name, null, ValueExprAST.String(stringValue));
+                //Move next to get actual value
                 return new ObjectDefineExprAST(valueType, isGlobal, name, aqn, ValueExprAST.String(lexer.GetNextToken().Value));
             }
             //Identify as string, need visitor to read value.
