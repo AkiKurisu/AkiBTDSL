@@ -72,14 +72,14 @@ If the variable type is Object (SharedObject), you can declare the type name bef
 Object navAgent "UnityEngine.AIModule,UnityEngine.AI.NavMeshAgent" Null
 ```
 
-The type name's format is `{Assembly Name},{NameSpace}.{ClassName}`.
+The type name's format is `{Assembly Name},{NameSpace}.{ClassName}` or use `Type.AssemblyQualifiedName`.
 
 Then the variable is set to global and has the ``NavMeshAgent`` type restriction.
 
 For nodes, we will skip the Root node (because all behavior trees enter from the Root), and start writing directly from the Root's child nodes.
 
 
-For a node, you need to declare its type (name index, can be modified by customizing TypeDictionary, see below)
+For a node, you need to declare its type.
 
 
 For ordinary variables that do not use the default value of the node, you need to declare its name (or use AkiLabelAttribute to alter field's name) and add ':' to assign
@@ -98,9 +98,7 @@ NavmeshSetDestination(destination=>myDestination)
 
 ## Compatible with AkiLabel
 
-The JIT of DSL relies on the meta data generated AOT in Editor.
-
-It supports use `AkiLabelAttribute`'s value as name to build behavior tree. For example:
+DSL supports use `AkiLabelAttribute`'s value as name to build behavior tree. For example:
 
 ```
 Vector3 玩家位置 (0,0,0)
