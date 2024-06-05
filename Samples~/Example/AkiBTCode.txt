@@ -1,5 +1,5 @@
 ///
-这是使用AkiBTDSL编写的行为树
+Behavior tree written by DSL
 ///
 Vector3 destination (0,0,0)
 Vector3 myPos (0,0,0)
@@ -9,7 +9,7 @@ Parallel(children:[
 	Sequence(children:[
 		Vector3Random(xRange:(-10,10),yRange:(0,0),zRange:(-10,10),operation:Relatively,
 		storeResult=>destination ),
-		DebugLog(logText:Patrol获取了新位置),
+		DebugLog(logText:"Agent get a new destination!"),
 		TimeWait(waitTime:10)
 	]),
 	Sequence(children:[

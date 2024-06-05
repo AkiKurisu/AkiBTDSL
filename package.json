@@ -1,7 +1,7 @@
 {
-  "name": "com.kurisu.akibdsl",
-  "displayName": "AkiBTDSL",
-  "version": "1.4.1",
+  "name": "com.kurisu.akibt.dsl",
+  "displayName": "AkiBT DSL",
+  "version": "1.4.3",
   "unity": "2021.3",
   "description": "Domain-Specific Language for AkiBT",
   "keywords": [
@@ -14,7 +14,7 @@
     "url": "https://github.com/AkiKurisu/AkiBTDSL.git"
   },
   "dependencies": {
-    "com.kurisu.akibt": "1.4.1",
+    "com.kurisu.akibt": "1.4.3",
     "com.unity.nuget.newtonsoft-json": "3.2.1"
   },
   "author": {
