@@ -85,10 +85,9 @@ namespace Kurisu.AkiBT.DSL
             }
             else
             {
-                Type boxType = value.GetType();
                 if (!NodeTypeRegistry.IsFieldType(value, node.Type))
                 {
-                    value = NodeTypeRegistry.Cast(in value, boxType, NodeTypeRegistry.GetValueType(node.Type));
+                    value = NodeTypeRegistry.Cast(in value, value.GetType(), NodeTypeRegistry.GetValueType(node.Type));
                 }
                 variable.SetValue(value);
             }
@@ -121,6 +120,7 @@ namespace Kurisu.AkiBT.DSL
             NodeBehavior parent = nodeStack.Peek();
             base.VisitPropertyAST(node);
             FieldInfo fieldInfo = node.MetaData.FieldInfo;
+            // This will also create instance for SharedTObject<UObject>
             SharedVariable variable = Activator.CreateInstance(fieldInfo.FieldType) as SharedVariable;
             if (node.IsShared)
             {
@@ -129,6 +129,7 @@ namespace Kurisu.AkiBT.DSL
             }
             else
             {
+                // SharedTObject<UObject> or SharedObject
                 if (variable is IBindableVariable<UObject> sharedObject)
                 {
                     WriteSharedObjectValue(sharedObject, valueStack.Pop() as string);
