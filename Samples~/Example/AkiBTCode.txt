@@ -14,7 +14,7 @@ Parallel(children:[
 	]),
 	Sequence(children:[
 		Sequence(children:[
-			TransformGetPosition(storeResult=>myPos),
+			TransformGetPosition(target:null,storeResult=>myPos),
 			 Vector3Operator(operation:Subtract,firstVector3=>myPos,
 				secondVector3=>destination,storeResult=>subtract),
 			Vector3GetSqrMagnitude(vector3=>subtract,result=>distance)
@@ -23,11 +23,11 @@ Parallel(children:[
 			FloatComparison(evaluateOnRunning:false,float1=>distance,
 				float2:4,operation:GreaterThan,child:
 				Sequence(abortOnConditionChanged:false,children:[
-					NavmeshStopAgent(isStopped:false),
-					NavmeshSetDestination(destination=>destination)
+					NavmeshStopAgent(agent:null,isStopped:false),
+					NavmeshSetDestination(agent:null,destination=>destination)
 				])
 			),
-			NavmeshStopAgent(isStopped:true)
+			NavmeshStopAgent(agent:null,isStopped:true)
 		])
 	])
 ])

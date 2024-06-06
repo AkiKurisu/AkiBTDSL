@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
+using UnityEngine.Pool;
 using UObject = UnityEngine.Object;
 namespace Kurisu.AkiBT.DSL
 {
@@ -11,6 +12,8 @@ namespace Kurisu.AkiBT.DSL
     /// </summary>
     public class BuildVisitor : ExprVisitor, IDisposable
     {
+        private bool isPooled;
+        private static readonly ObjectPool<BuildVisitor> pool = new(() => new());
         public bool Verbose { get; set; }
         public readonly Stack<SharedVariable> variableStack = new();
         public readonly Stack<NodeBehavior> nodeStack = new();
@@ -73,13 +76,20 @@ namespace Kurisu.AkiBT.DSL
             variable.IsGlobal = node.IsGlobal;
             variable.IsExposed = node.IsGlobal;
             var value = valueStack.Pop();
-            if (node.Type == FieldType.Object && node is ObjectDefineExprAST objectDefineExprAST && variable is SharedObject sharedObject)
+            if (node.Type == FieldType.Object)
             {
+                ObjectDefineExprAST objectDefineExprAST = node as ObjectDefineExprAST;
+                SharedObject sharedObject = variable as SharedObject;
                 sharedObject.ConstraintTypeAQN = objectDefineExprAST.ConstraintTypeAQN;
                 WriteSharedObjectValue(sharedObject, value as string);
             }
             else
             {
+                Type boxType = value.GetType();
+                if (!NodeTypeRegistry.IsFieldType(value, node.Type))
+                {
+                    value = NodeTypeRegistry.Cast(in value, boxType, NodeTypeRegistry.GetValueType(node.Type));
+                }
                 variable.SetValue(value);
             }
             if (Verbose) Log($"Build variable {variable.Name}, type: {node.Type}, value: {variable.GetValue()}");
@@ -152,15 +162,27 @@ namespace Kurisu.AkiBT.DSL
                 _ => throw new ArgumentException(nameof(type)),
             };
         }
-        private static void Log(string message)
+        protected static void Log(string message)
         {
             Debug.Log($"<color=#9999FF>[Build Visitor] {message}</color>");
+        }
+        public static BuildVisitor GetPooled()
+        {
+            var visitor = pool.Get();
+            visitor.isPooled = true;
+            return visitor;
         }
         public void Dispose()
         {
             variableStack.Clear();
             valueStack.Clear();
             nodeStack.Clear();
+            // Only release visitor from pool
+            if (isPooled)
+            {
+                isPooled = false;
+                pool.Release(this);
+            }
         }
     }
 }

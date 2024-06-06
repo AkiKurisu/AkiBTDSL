@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.Assertions;
 namespace Kurisu.AkiBT.DSL
 {
-    public class Reader
+    public sealed class Reader
     {
         private const string Pattern = @"(\(|\)|\[|\,|\:|\]| |\n|\r|=>|\t)";
         private readonly string[] tokens;
@@ -90,13 +90,15 @@ namespace Kurisu.AkiBT.DSL
         }
         public Vector3Int ReadVector3Int()
         {
-            int x, y;
+            int x, y, z;
             AssertToken(Read(), Symbol.LeftParenthesis);
             x = int.Parse(Read());
             AssertToken(Read(), Symbol.Comma);
             y = int.Parse(Read());
+            AssertToken(Read(), Symbol.Comma);
+            z = int.Parse(Read());
             AssertToken(Read(), Symbol.RightParenthesis);
-            return new Vector3Int(x, y);
+            return new Vector3Int(x, y, z);
         }
         public Vector2 ReadVector2()
         {
@@ -117,66 +119,6 @@ namespace Kurisu.AkiBT.DSL
             y = int.Parse(Read());
             AssertToken(Read(), Symbol.RightParenthesis);
             return new Vector2Int(x, y);
-        }
-        public bool TryParseVector2(out Vector2 vector2)
-        {
-            int bt = CurrentIndex;
-            try
-            {
-                vector2 = ReadVector2();
-                return true;
-            }
-            catch
-            {
-                MoveTo(bt);
-                vector2 = default;
-                return false;
-            }
-        }
-        public bool TryParseVector3(out Vector3 vector3)
-        {
-            int bt = CurrentIndex;
-            try
-            {
-                vector3 = ReadVector3();
-                return true;
-            }
-            catch
-            {
-                MoveTo(bt);
-                vector3 = default;
-                return false;
-            }
-        }
-        public bool TryParseVector3Int(out Vector3Int vector3Int)
-        {
-            int bt = CurrentIndex;
-            try
-            {
-                vector3Int = ReadVector3Int();
-                return true;
-            }
-            catch
-            {
-                MoveTo(bt);
-                vector3Int = default;
-                return false;
-            }
-        }
-        public bool TryParseVector2Int(out Vector2Int vector2Int)
-        {
-            int bt = CurrentIndex;
-            try
-            {
-                vector2Int = ReadVector2Int();
-                return true;
-            }
-            catch
-            {
-                MoveTo(bt);
-                vector2Int = default;
-                return false;
-            }
         }
         private static void AssertToken(string token, string assertToken)
         {

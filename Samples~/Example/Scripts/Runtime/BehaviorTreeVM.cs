@@ -37,6 +37,7 @@ namespace Kurisu.AkiBT.Example
         public void Run()
         {
             if (behaviorTreeSO == null || isPlaying) return;
+            behaviorTreeSO.Initialize();
             behaviorTreeSO.Init(gameObject);
             isPlaying = true;
         }

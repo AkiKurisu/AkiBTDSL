@@ -150,22 +150,22 @@ namespace Kurisu.AkiBT.DSL
             }
             // Aligned with reader index
             reader.MoveBack();
-            if (reader.TryParseVector2Int(out Vector2Int vector2Int))
+            if (TryParseVector2Int(out Vector2Int vector2Int))
             {
                 value = new(FieldType.Vector2Int, vector2Int);
                 return true;
             }
-            if (reader.TryParseVector2(out Vector2 vector2))
+            if (TryParseVector2(out Vector2 vector2))
             {
                 value = new(FieldType.Vector2, vector2);
                 return true;
             }
-            if (reader.TryParseVector3Int(out Vector3Int vector3Int))
+            if (TryParseVector3Int(out Vector3Int vector3Int))
             {
                 value = new(FieldType.Vector3Int, vector3Int);
                 return true;
             }
-            if (reader.TryParseVector3(out Vector3 vector3))
+            if (TryParseVector3(out Vector3 vector3))
             {
                 value = new(FieldType.Vector3, vector3);
                 return true;
@@ -174,6 +174,66 @@ namespace Kurisu.AkiBT.DSL
             // Special case here since we can not know whether it is a symbol here
             reader.MoveNext();
             return false;
+        }
+        public bool TryParseVector2(out Vector2 vector2)
+        {
+            int bt = reader.CurrentIndex;
+            try
+            {
+                vector2 = reader.ReadVector2();
+                return true;
+            }
+            catch
+            {
+                reader.MoveTo(bt);
+                vector2 = default;
+                return false;
+            }
+        }
+        public bool TryParseVector3(out Vector3 vector3)
+        {
+            int bt = reader.CurrentIndex;
+            try
+            {
+                vector3 = reader.ReadVector3();
+                return true;
+            }
+            catch
+            {
+                reader.MoveTo(bt);
+                vector3 = default;
+                return false;
+            }
+        }
+        public bool TryParseVector3Int(out Vector3Int vector3Int)
+        {
+            int bt = reader.CurrentIndex;
+            try
+            {
+                vector3Int = reader.ReadVector3Int();
+                return true;
+            }
+            catch
+            {
+                reader.MoveTo(bt);
+                vector3Int = default;
+                return false;
+            }
+        }
+        public bool TryParseVector2Int(out Vector2Int vector2Int)
+        {
+            int bt = reader.CurrentIndex;
+            try
+            {
+                vector2Int = reader.ReadVector2Int();
+                return true;
+            }
+            catch
+            {
+                reader.MoveTo(bt);
+                vector2Int = default;
+                return false;
+            }
         }
         private static void Log(Token token)
         {

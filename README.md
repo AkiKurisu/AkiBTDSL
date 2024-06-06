@@ -1,6 +1,6 @@
-# AkiBTDSL
+# AkiBT DSL
 
-AkBTDSL is a domain-specific language designed for my Behavior Tree framework [AkiBT](https://github.com/AkiKurisu/AkiBT), but it can also be usd in other BT-like framework.
+AkBT.DSL is a domain-specific language designed for my Behavior Tree framework [AkiBT](https://github.com/AkiKurisu/AkiBT), but it can also be usd in other BT-like framework.
 
 Inspired by Game AI Pro and .Net's C# version for LLVM's official tutorial of Kaleidoscope.
 

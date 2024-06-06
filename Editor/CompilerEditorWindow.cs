@@ -363,25 +363,10 @@ namespace Kurisu.AkiBT.DSL.Editor
                         name = p.Name,
                         label = label?.Title ?? p.Name,
                         // Get a fast field type
-                        fieldType = GetFieldType(p.FieldType)
+                        fieldType = NodeTypeRegistry.GetFieldType(p.FieldType)
                     });
                 });
             return info;
-        }
-        private static FieldType GetFieldType(Type type)
-        {
-            if (type.IsSubclassOf(typeof(SharedVariable))) return FieldType.Variable;
-            if (type.IsEnum) return FieldType.Enum;
-            if (type == typeof(int)) return FieldType.Int;
-            if (type == typeof(float)) return FieldType.Float;
-            if (type == typeof(bool)) return FieldType.Bool;
-            if (type == typeof(string)) return FieldType.String;
-            if (type == typeof(Vector2)) return FieldType.Vector2;
-            if (type == typeof(Vector2Int)) return FieldType.Vector2Int;
-            if (type == typeof(Vector3)) return FieldType.Vector3;
-            if (type == typeof(Vector3Int)) return FieldType.Vector3Int;
-            if (type.IsSubclassOf(typeof(UObject))) return FieldType.Object;
-            return FieldType.Unknown;
         }
         private static IEnumerable<FieldInfo> GetAllFields(Type t)
         {

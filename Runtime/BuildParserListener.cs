@@ -4,16 +4,12 @@ using UnityEngine;
 using UnityEngine.Pool;
 namespace Kurisu.AkiBT.DSL
 {
-    public class BuildParserListener : IParserListener, IDisposable
+    public sealed class BuildParserListener : IParserListener, IDisposable
     {
         private static readonly ObjectPool<BuildParserListener> pool = new(() => new());
-        private readonly BuildVisitor visitor;
+        private BuildVisitor visitor;
         private readonly List<SharedVariable> variables = new();
         private readonly List<NodeBehavior> nodes = new();
-        public BuildParserListener()
-        {
-            visitor = new BuildVisitor();
-        }
         public BuildParserListener Verbose(bool verbose)
         {
             visitor.Verbose = verbose;
@@ -64,13 +60,21 @@ namespace Kurisu.AkiBT.DSL
             nodes.Clear();
             return instance;
         }
-        public static BuildParserListener GetPooled()
+        /// <summary>
+        /// Get pooled build listener
+        /// </summary>
+        /// <param name="buildVisitor">The build visitor attached to</param>
+        /// <returns></returns>
+        public static BuildParserListener GetPooled(BuildVisitor buildVisitor)
         {
-            return pool.Get();
+            var listener = pool.Get();
+            listener.visitor = buildVisitor;
+            return listener;
         }
         public void Dispose()
         {
-            visitor.Dispose();
+            visitor?.Dispose();
+            visitor = null;
             variables.Clear();
             nodes.Clear();
             pool.Release(this);

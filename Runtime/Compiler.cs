@@ -1,5 +1,8 @@
 namespace Kurisu.AkiBT.DSL
 {
+    /// <summary>
+    /// Default compiler, used to demonstrate API combination and calling
+    /// </summary>
     public class Compiler
     {
         private readonly NodeTypeRegistry registry;
@@ -15,7 +18,7 @@ namespace Kurisu.AkiBT.DSL
         public BehaviorTreeSO Compile(string code)
         {
             var lexer = new Lexer(new Reader(code), registry).Verbose(verbose);
-            var bpl = BuildParserListener.GetPooled().Verbose(verbose);
+            var bpl = BuildParserListener.GetPooled(BuildVisitor.GetPooled()).Verbose(verbose);
             try
             {
                 lexer.ParseToEnd(new Parser(lexer, bpl));

@@ -5,37 +5,10 @@ using System.Reflection;
 using Newtonsoft.Json;
 using System.IO;
 using UnityEngine;
+using UObject = UnityEngine.Object;
+using UnityEngine.Assertions;
 namespace Kurisu.AkiBT.DSL
 {
-    public interface ITypeContract
-    {
-        bool CanConvert(Type inputType, Type expectType);
-        object Convert(in object value, Type inputType, Type expectType);
-    }
-    public class Vector3IntContract : ITypeContract
-    {
-        public bool CanConvert(Type inputType, Type expectType)
-        {
-            return (inputType == typeof(Vector3Int)) && expectType == typeof(Vector3);
-        }
-
-        public object Convert(in object value, Type inputType, Type expectType)
-        {
-            return (Vector3)(Vector3Int)value;
-        }
-    }
-    public class Vector2IntContract : ITypeContract
-    {
-        public bool CanConvert(Type inputType, Type expectType)
-        {
-            return (inputType == typeof(Vector2Int)) && expectType == typeof(Vector2);
-        }
-
-        public object Convert(in object value, Type inputType, Type expectType)
-        {
-            return (Vector2)(Vector2Int)value;
-        }
-    }
     public class NodeTypeRegistry
     {
         [JsonProperty]
@@ -85,6 +58,66 @@ namespace Kurisu.AkiBT.DSL
                 }
             }
             return value;
+        }
+        /// <summary>
+        /// Get <see cref="FieldType"/> from type
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public static FieldType GetFieldType(Type type)
+        {
+            if (type.IsSubclassOf(typeof(SharedVariable))) return FieldType.Variable;
+            if (type.IsEnum) return FieldType.Enum;
+            if (type == typeof(int)) return FieldType.Int;
+            if (type == typeof(float)) return FieldType.Float;
+            if (type == typeof(bool)) return FieldType.Bool;
+            if (type == typeof(string)) return FieldType.String;
+            if (type == typeof(Vector2)) return FieldType.Vector2;
+            if (type == typeof(Vector2Int)) return FieldType.Vector2Int;
+            if (type == typeof(Vector3)) return FieldType.Vector3;
+            if (type == typeof(Vector3Int)) return FieldType.Vector3Int;
+            if (type.IsSubclassOf(typeof(UObject))) return FieldType.Object;
+            return FieldType.Unknown;
+        }
+        /// <summary>
+        /// Get value type from <see cref="FieldType"/>
+        /// </summary>
+        /// <param name="fieldType"></param>
+        /// <returns></returns>
+        public static Type GetValueType(FieldType fieldType)
+        {
+            Assert.IsTrue((int)fieldType <= 7);
+            return fieldType switch
+            {
+                FieldType.Int => typeof(int),
+                FieldType.Float => typeof(float),
+                FieldType.Bool => typeof(bool),
+                FieldType.Vector2 => typeof(Vector2),
+                FieldType.Vector2Int => typeof(Vector2Int),
+                FieldType.Vector3 => typeof(Vector3),
+                FieldType.Vector3Int => typeof(Vector3Int),
+                FieldType.String => typeof(string),
+                _ => throw new ArgumentOutOfRangeException(nameof(fieldType)),
+            };
+        }
+        public static bool IsFieldType(object value, FieldType fieldType)
+        {
+            return fieldType switch
+            {
+                FieldType.Variable => value is SharedObject,
+                FieldType.Enum => value is Enum,
+                FieldType.Int => value is int,
+                FieldType.Float => value is float,
+                FieldType.Bool => value is bool,
+                FieldType.String => value is string,
+                FieldType.Vector2 => value is Vector2,
+                FieldType.Vector2Int => value is Vector2Int,
+                FieldType.Vector3 => value is Vector3,
+                FieldType.Vector3Int => value is Vector3Int,
+                FieldType.Object => value is UObject,
+                FieldType.Unknown => false,
+                _ => throw new ArgumentOutOfRangeException(nameof(fieldType)),
+            };
         }
     }
     public class NodeInfo
