@@ -50,7 +50,8 @@ namespace Kurisu.AkiBT.DSL.Editor
         [MenuItem("Tools/AkiBT/DSL/Compiler")]
         public static void OpenEditor()
         {
-            GetWindow<CompilerEditorWindow>("AkiBT Compiler");
+            var window = GetWindow<CompilerEditorWindow>("AkiBT Compiler");
+            window.maxSize = new Vector2(600, 800);
         }
         private void OnEnable()
         {
@@ -77,11 +78,10 @@ namespace Kurisu.AkiBT.DSL.Editor
                 state = 2;
             }
             m_ScrollPosition = BeginVerticalScrollView(m_ScrollPosition, false, GUI.skin.verticalScrollbar, "OL Box");
-            EditorGUILayout.BeginVertical();
             GUILayout.Label("Input Code");
-            inputPosition = BeginVerticalScrollView(inputPosition, false, GUI.skin.verticalScrollbar, "OL Box", GUILayout.Height(400));
-            InputCode = EditorGUILayout.TextArea(InputCode, textAreaStyle);
+            InputCode = EditorGUILayout.TextArea(InputCode, textAreaStyle, GUILayout.MaxHeight(700));
             EditorGUILayout.EndScrollView();
+            GUILayout.FlexibleSpace();
             switch (mTab)
             {
                 case 0:
@@ -91,9 +91,6 @@ namespace Kurisu.AkiBT.DSL.Editor
                     DrawDecompile();
                     break;
             }
-
-            EditorGUILayout.EndVertical();
-            EditorGUILayout.EndScrollView();
             DrawToolbar();
         }
         private void DrawCompile()
@@ -133,6 +130,8 @@ namespace Kurisu.AkiBT.DSL.Editor
         {
             DrawDragAndDrop();
             DrawDecompileResult(state);
+            var orgColor = GUI.backgroundColor;
+            GUI.backgroundColor = new Color(140 / 255f, 160 / 255f, 250 / 255f);
             if (GUILayout.Button("Decompile All", GUILayout.MinHeight(25)))
             {
                 string path = EditorUtility.OpenFolderPanel("Choose decompile files saving path", Application.dataPath, "");
@@ -165,6 +164,7 @@ namespace Kurisu.AkiBT.DSL.Editor
                 AssetDatabase.Refresh();
                 GUIUtility.ExitGUI();
             }
+            GUI.backgroundColor = orgColor;
         }
         private void DrawDragAndDrop()
         {
@@ -348,10 +348,7 @@ namespace Kurisu.AkiBT.DSL.Editor
                 return info;
             }
             info.isVariable = false;
-            var properties = type.GetFields(BindingFlags.Public | BindingFlags.Instance)
-                  .Concat(GetAllFields(type))
-                  .Where(field => field.IsInitOnly == false && field.GetCustomAttribute<HideInEditorWindow>() == null)
-                  .ToList();
+            var properties = NodeTypeRegistry.GetAllFields(type).ToList();
             if (properties.Count == 0) return info;
             info.properties = new();
             properties.ForEach((p) =>
@@ -367,15 +364,6 @@ namespace Kurisu.AkiBT.DSL.Editor
                     });
                 });
             return info;
-        }
-        private static IEnumerable<FieldInfo> GetAllFields(Type t)
-        {
-            if (t == null)
-                return Enumerable.Empty<FieldInfo>();
-
-            return t.GetFields(BindingFlags.NonPublic | BindingFlags.Instance)
-                .Where(field => field.GetCustomAttribute<SerializeField>() != null || field.GetCustomAttribute<SerializeReference>() != null)
-                .Concat(GetAllFields(t.BaseType));
         }
         private static void Log(string message)
         {

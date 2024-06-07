@@ -16,8 +16,10 @@ namespace Kurisu.AkiBT.DSL
         public static readonly HashSet<ITypeContract> contracts = new();
         static NodeTypeRegistry()
         {
-            contracts.Add(new Vector2IntContract());
-            contracts.Add(new Vector3IntContract());
+            contracts.Add(new Vector2IntToVector2Contract());
+            contracts.Add(new Vector3IntToVector3Contract());
+            contracts.Add(new Vector2ToVector3Contract());
+            contracts.Add(new Vector3ToVector2Contract());
         }
         public static NodeTypeRegistry FromPath(string path)
         {
@@ -119,6 +121,22 @@ namespace Kurisu.AkiBT.DSL
                 _ => throw new ArgumentOutOfRangeException(nameof(fieldType)),
             };
         }
+        public static IEnumerable<FieldInfo> GetAllFields(Type type)
+        {
+            return type.GetFields(BindingFlags.Public | BindingFlags.Instance)
+                    .Concat(GetAllFields_Internal(type))
+                    .Where(field => field.IsInitOnly == false && field.GetCustomAttribute<HideInEditorWindow>() == null)
+                    .ToList();
+        }
+        private static IEnumerable<FieldInfo> GetAllFields_Internal(Type t)
+        {
+            if (t == null)
+                return Enumerable.Empty<FieldInfo>();
+
+            return t.GetFields(BindingFlags.NonPublic | BindingFlags.Instance)
+                    .Where(field => field.GetCustomAttribute<SerializeField>() != null || field.GetCustomAttribute<SerializeReference>() != null)
+                    .Concat(GetAllFields_Internal(t.BaseType));
+        }
     }
     public class NodeInfo
     {
@@ -138,7 +156,7 @@ namespace Kurisu.AkiBT.DSL
             type ??= Type.GetType(Assembly.CreateQualifiedName(asm, $"{ns}.{className}"));
             if (fieldInfos == null)
             {
-                fieldInfos = GetAllFields(type).ToList();
+                fieldInfos = NodeTypeRegistry.GetAllFields(type).ToList();
                 foreach (var property in properties)
                 {
                     var field = fieldInfos.FirstOrDefault(x => x.Name == property.name);
@@ -147,14 +165,6 @@ namespace Kurisu.AkiBT.DSL
                 }
             }
             return type;
-        }
-        private static IEnumerable<FieldInfo> GetAllFields(Type t)
-        {
-            if (t == null)
-                return Enumerable.Empty<FieldInfo>();
-
-            return t.GetFields(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public)
-                .Concat(GetAllFields(t.BaseType));
         }
     }
     public class PropertyInfo

@@ -1,12 +1,13 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 #if UNITY_EDITOR
 using UnityEditor;
-#endif
 using UnityEngine;
+#endif
 namespace Kurisu.AkiBT.DSL
 {
     /// <summary>
@@ -36,7 +37,8 @@ namespace Kurisu.AkiBT.DSL
                 var value = variable.GetValue();
                 if (variable is SharedObject sharedObject && !string.IsNullOrEmpty(sharedObject.ConstraintTypeAQN))
                 {
-                    SafeWrite(sharedObject.ConstraintTypeAQN);
+                    Type constraintType = Type.GetType(sharedObject.ConstraintTypeAQN);
+                    SafeWrite($"{constraintType.Assembly.GetName().Name}, {constraintType.Namespace}.{constraintType.Name}");
                     Space();
                 }
 #if UNITY_EDITOR
@@ -60,80 +62,40 @@ namespace Kurisu.AkiBT.DSL
             var type = node.GetType();
             Write(type.Name);
             Write('(');
-            int index = 0;
-            if (WriteChildren(node, indentLevel))
-            {
-                index = stringBuilder.Length;
-            }
-            if (WriteProperties(type, node) && index > 0)
-            {
-                for (int i = 0; i < indentLevel * 4; i++)
-                    stringBuilder.Insert(index, ' ');
-                stringBuilder.Insert(index, ",\n");
-            }
+            WriteProperties(type, node, indentLevel);
             Write(')');
         }
-        private bool WriteChildren(NodeBehavior node, int indentLevel)
-        {
-            bool haveChildren = false;
-            switch (node)
-            {
-                case Composite composite:
-                    {
-                        Write("children:[");
-                        NewLine();
-                        for (var i = 0; i < composite.Children.Count; i++)
-                        {
-                            haveChildren = true;
-                            WriteNode(composite.Children[i], indentLevel + 1);
-                            if (i < composite.Children.Count - 1)
-                            {
-                                Write(',');
-                            }
-                            NewLine();
-                        }
-                        WriteIndent(indentLevel);
-                        Write(']');
-                        break;
-                    }
-                case Conditional conditional:
-                    {
-                        if (conditional.Child == null) return false;
-                        haveChildren = true;
-                        Write("child:");
-                        NewLine();
-                        WriteNode(conditional.Child, indentLevel + 1);
-                        break;
-                    }
-                case Decorator decorator:
-                    {
-                        haveChildren = true;
-                        Write("child:");
-                        NewLine();
-                        WriteNode(decorator.Child, indentLevel + 1);
-                        break;
-                    }
-            }
-            return haveChildren;
-        }
-        private bool WriteProperties(Type type, NodeBehavior node)
+        private void WriteProperties(Type type, NodeBehavior node, int indentLevel)
         {
             bool haveProperty = false;
-            var properties = type.GetFields(BindingFlags.Public | BindingFlags.Instance)
-                            .Concat(GetAllFields(type))
-                            .Where(field => field.IsInitOnly == false
-                             && field.GetCustomAttribute<HideInEditorWindow>() == null
-                             && !field.FieldType.IsSubclassOf(typeof(UnityEngine.Object))
-                             )
-                            .ToList();
+            var properties = NodeTypeRegistry.GetAllFields(type).ToList();
             for (var i = 0; i < properties.Count; i++)
             {
                 var p = properties[i];
                 var value = p.GetValue(node);
                 if (value == null) continue;
-                haveProperty = true;
+                if (haveProperty)
+                {
+                    Write(',');
+                }
+                else
+                {
+                    haveProperty = true;
+                }
                 WritePropertyName(p);
-                if (p.FieldType.IsSubclassOf(typeof(SharedVariable)))
+                var fieldType = p.FieldType;
+                if (IsIList(fieldType))
+                {
+                    Write(':');
+                    WriteArray(value as IList, fieldType.GenericTypeArguments[0], indentLevel);
+                }
+                else if (fieldType.IsSubclassOf(typeof(NodeBehavior)) || fieldType == typeof(NodeBehavior))
+                {
+                    Write(':');
+                    NewLine();
+                    WriteNode(value as NodeBehavior, indentLevel + 1);
+                }
+                else if (fieldType.IsSubclassOf(typeof(SharedVariable)) || fieldType == typeof(SharedVariable))
                 {
                     WriteVariableValue(value as SharedVariable);
                 }
@@ -141,12 +103,38 @@ namespace Kurisu.AkiBT.DSL
                 {
                     WritePropertyValue(value);
                 }
-                if (i < properties.Count - 1)
+            }
+        }
+        private static bool IsIList(Type type)
+        {
+            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>))
+            {
+                return true;
+            }
+            return type.IsArray;
+        }
+        private void WriteArray(IList list, Type childType, int indentLevel)
+        {
+            Write('[');
+            for (var i = 0; i < list.Count; i++)
+            {
+                if (i != 0) Write(',');
+                var value = list[i];
+                if (childType.IsSubclassOf(typeof(NodeBehavior)) || childType == typeof(NodeBehavior))
                 {
-                    Write(',');
+                    NewLine();
+                    WriteNode(value as NodeBehavior, indentLevel + 1);
+                }
+                else if (childType.IsSubclassOf(typeof(SharedVariable)) || childType == typeof(SharedVariable))
+                {
+                    // TODO:
+                }
+                else
+                {
+                    SafeWrite(value);
                 }
             }
-            return haveProperty;
+            Write(']');
         }
         private void WritePropertyName(FieldInfo fieldInfo)
         {
@@ -178,24 +166,13 @@ namespace Kurisu.AkiBT.DSL
             Write(':');
             SafeWrite(value);
         }
-        private static IEnumerable<FieldInfo> GetAllFields(Type t)
-        {
-            if (t == null)
-                return Enumerable.Empty<FieldInfo>();
-
-            return t.GetFields(BindingFlags.NonPublic | BindingFlags.Instance)
-                .Where(field => field.GetCustomAttribute<SerializeField>() != null &&
-                 //Skip Reference Property
-                 field.GetCustomAttribute<SerializeReference>() == null)
-                .Concat(GetAllFields(t.BaseType));
-        }
         private void Space()
         {
             stringBuilder.Append(' ');
         }
         private void WriteIndent(int indentLevel)
         {
-            stringBuilder.Append(' ', indentLevel);
+            stringBuilder.Append(' ', indentLevel * 4);
         }
         private void NewLine()
         {
