@@ -76,21 +76,24 @@ namespace Kurisu.AkiBT.DSL
             variable.IsGlobal = node.IsGlobal;
             variable.IsExposed = node.IsGlobal;
             var value = valueStack.Pop();
-            if (node.Type == FieldType.Object)
+            if (!NodeTypeRegistry.IsFieldType(value, node.Type))
             {
-                ObjectDefineExprAST objectDefineExprAST = node as ObjectDefineExprAST;
-                SharedObject sharedObject = variable as SharedObject;
-                sharedObject.ConstraintTypeAQN = objectDefineExprAST.ConstraintTypeAQN;
-                WriteSharedObjectValue(sharedObject, value as string);
+                value = NodeTypeRegistry.Cast(in value, value.GetType(), NodeTypeRegistry.GetValueType(node.Type));
             }
-            else
-            {
-                if (!NodeTypeRegistry.IsFieldType(value, node.Type))
-                {
-                    value = NodeTypeRegistry.Cast(in value, value.GetType(), NodeTypeRegistry.GetValueType(node.Type));
-                }
-                variable.SetValue(value);
-            }
+            variable.SetValue(value);
+            if (Verbose) Log($"Build variable {variable.Name}, type: {node.Type}, value: {variable.GetValue()}");
+            variableStack.Push(variable);
+            return node;
+        }
+        protected internal override ExprAST VisitObjectDefineAST(ObjectDefineExprAST node)
+        {
+            base.VisitObjectDefineAST(node);
+            SharedObject variable = CreateInstance(node.Type) as SharedObject;
+            variable.Name = node.Name;
+            variable.IsGlobal = node.IsGlobal;
+            variable.IsExposed = node.IsGlobal;
+            variable.ConstraintTypeAQN = node.ConstraintTypeAQN;
+            WriteSharedObjectValue(variable, valueStack.Pop() as string);
             if (Verbose) Log($"Build variable {variable.Name}, type: {node.Type}, value: {variable.GetValue()}");
             variableStack.Push(variable);
             return node;

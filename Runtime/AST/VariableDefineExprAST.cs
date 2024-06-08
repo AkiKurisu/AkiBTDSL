@@ -33,5 +33,9 @@ namespace Kurisu.AkiBT.DSL
             ConstraintTypeAQN = aqn;
         }
         public string ConstraintTypeAQN { get; }
+        protected internal override ExprAST Accept(ExprVisitor visitor)
+        {
+            return visitor.VisitObjectDefineAST(this);
+        }
     }
 }

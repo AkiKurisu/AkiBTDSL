@@ -8,6 +8,7 @@ namespace Kurisu.AkiBT.DSL
     public sealed class Reader
     {
         private const string Pattern = @"(\(|\)|\[|\,|\:|\]| |\n|\r|=>|\t)";
+        private static readonly string[] ignoreTokens = new[] { "\n", "\r", "\t", " ", "" };
         private readonly string[] tokens;
         public string CurrentToken
         {
@@ -74,7 +75,7 @@ namespace Kurisu.AkiBT.DSL
             }
             if (start < code.Length)
                 tokens.AddRange(Regex.Split(code[(start - flag)..], Pattern));
-            return tokens.Where(x => !new[] { "\n", "\r", "\t", " ", "" }.Contains(x)).ToArray();
+            return tokens.Where(x => !ignoreTokens.Contains(x)).ToArray();
         }
         public Vector3 ReadVector3()
         {

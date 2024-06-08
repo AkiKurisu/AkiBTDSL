@@ -56,6 +56,11 @@ namespace Kurisu.AkiBT.DSL
             Visit(node.Value);
             return node;
         }
+        protected internal virtual ExprAST VisitObjectDefineAST(ObjectDefineExprAST node)
+        {
+            Visit(node.Value);
+            return node;
+        }
 
         protected internal virtual ExprAST VisitValueExprAST(ValueExprAST node)
         {
