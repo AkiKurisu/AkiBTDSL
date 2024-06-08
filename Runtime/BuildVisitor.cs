@@ -60,10 +60,22 @@ namespace Kurisu.AkiBT.DSL
         protected internal override ExprAST VisitArrayExprAST(ArrayExprAST node)
         {
             IList array = Activator.CreateInstance(node.FieldType, node.Children.Count) as IList;
-            foreach (var child in node.Children)
+            if (array.IsFixedSize)
             {
-                Visit(child);
-                array.Add(valueStack.Pop());
+                int i = 0;
+                foreach (var child in node.Children)
+                {
+                    Visit(child);
+                    array[i++] = valueStack.Pop();
+                }
+            }
+            else
+            {
+                foreach (var child in node.Children)
+                {
+                    Visit(child);
+                    array.Add(valueStack.Pop());
+                }
             }
             valueStack.Push(array);
             return node;

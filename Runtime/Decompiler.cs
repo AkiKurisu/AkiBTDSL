@@ -84,10 +84,10 @@ namespace Kurisu.AkiBT.DSL
                 }
                 WritePropertyName(p);
                 var fieldType = p.FieldType;
-                if (IsIList(fieldType))
+                if (IsIList(fieldType, out Type elementType))
                 {
                     Write(':');
-                    WriteArray(value as IList, fieldType.GenericTypeArguments[0], indentLevel);
+                    WriteArray(value as IList, elementType, indentLevel);
                 }
                 else if (fieldType.IsSubclassOf(typeof(NodeBehavior)) || fieldType == typeof(NodeBehavior))
                 {
@@ -105,13 +105,20 @@ namespace Kurisu.AkiBT.DSL
                 }
             }
         }
-        private static bool IsIList(Type type)
+        private static bool IsIList(Type type, out Type elementType)
         {
             if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>))
             {
+                elementType = type.GetGenericArguments()[0];
                 return true;
             }
-            return type.IsArray;
+            if (type.IsArray)
+            {
+                elementType = type.GetElementType();
+                return true;
+            }
+            elementType = null;
+            return false;
         }
         private void WriteArray(IList list, Type childType, int indentLevel)
         {
